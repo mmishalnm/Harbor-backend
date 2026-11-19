@@ -108,7 +108,12 @@ func (s *Store) ResolveDisplayNames(ctx context.Context, a Actor, in DisplayName
 	}
 	// Nested label reads inherit the same account. Their IDs come only from an
 	// accessible primary record; no arbitrary parent/customer traversal is allowed.
+	parentLabels := map[string]string{}
 	nameOf := func(col, field, id string) (string, error) {
+		key := col + ":" + id
+		if name, ok := parentLabels[key]; ok {
+			return name, nil
+		}
 		if id == "" {
 			return "", nil
 		}
@@ -119,6 +124,7 @@ func (s *Store) ResolveDisplayNames(ctx context.Context, a Actor, in DisplayName
 		if err != nil {
 			return "", err
 		}
+		parentLabels[key] = r.Name
 		return r.Name, nil
 	}
 	for col, ids := range groups {
@@ -199,7 +205,11 @@ func (s *Store) ResolveDisplayNames(ctx context.Context, a Actor, in DisplayName
 				if err != nil {
 					return out, err
 				}
-				id, label = r.TripID, vehicle+" · "+r.TripDate
+				tripDate := r.CreatedAt.In(tripTimezone).Format("02 Jan 2006")
+				if date, err := time.Parse("2006-01-02", r.TripDate); err == nil {
+					tripDate = date.Format("02 Jan 2006")
+				}
+				id, label = r.TripID, vehicle+" · "+tripDate
 			case "invoices":
 				id, label = r.InvoiceID, r.InvoiceNo
 			case "stockMovements":
