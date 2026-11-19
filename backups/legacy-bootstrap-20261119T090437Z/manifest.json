@@ -1,0 +1,15 @@
+{
+  "businessName": "Harbor Business",
+  "configuredOwnerUsername": "admin",
+  "counts": {
+    "counters": 1,
+    "users": 1
+  },
+  "createdAt": "2026-11-19T09:04:38.34859Z",
+  "format": "concatenated BSON documents",
+  "scope": "records missing business ownership before migration",
+  "sha256": {
+    "counters": "4c1f4838683f50dbffa6f82d3ef3f07ebac96c74a49e52e5ec06a5e6deae7ee1",
+    "users": "704b62d94e4225c6a97e75921b5d7776307674f353482da48c8ce0ef949b9a4a"
+  }
+}

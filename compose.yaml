@@ -1,0 +1,23 @@
+services:
+  mongo:
+    image: mongo:8.0.16
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGO_PORT:?Set MONGO_PORT in .env}"]
+    ports:
+      - "127.0.0.1:${MONGO_PORT}:${MONGO_PORT}"
+    environment:
+      MONGO_PORT: "${MONGO_PORT}"
+    volumes:
+      - mongoData:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --port $$MONGO_PORT --eval
+          'try { if (rs.status().myState !== 1) quit(1); }
+          catch (e) { rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:"+process.env.MONGO_PORT}]}); quit(1); }'
+      interval: 3s
+      timeout: 10s
+      retries: 30
+      start_period: 5s
+volumes:
+  mongoData:
