@@ -209,7 +209,11 @@ func (s *Store) ResolveDisplayNames(ctx context.Context, a Actor, in DisplayName
 				if date, err := time.Parse("2006-01-02", r.TripDate); err == nil {
 					tripDate = date.Format("02 Jan 2006")
 				}
-				id, label = r.TripID, vehicle+" · "+tripDate
+				tripName := r.Name
+				if tripName == "" {
+					tripName = defaultTripName(r.TripID)
+				}
+				id, label = r.TripID, tripName+" · "+vehicle+" · "+tripDate
 			case "invoices":
 				id, label = r.InvoiceID, r.InvoiceNo
 			case "stockMovements":

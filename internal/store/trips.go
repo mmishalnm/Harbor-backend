@@ -12,6 +12,7 @@ import (
 )
 
 type OrderInput struct {
+	TripID     string `json:"tripId"`
 	CustomerID string `json:"customerId"`
 	Source     string `json:"source"`
 	Items      []Item `json:"items"`
@@ -60,15 +61,27 @@ func (s *Store) CreateOrder(ctx context.Context, a Actor, in OrderInput) (Order,
 		if err != nil {
 			return err
 		}
-		if a.Role == DeliveryPartner {
-			return s.autoAssignOrder(sc, a, &out)
+		if in.TripID != "" {
+			if err := s.attachOrderToTrip(sc, a, in.TripID, &out); err != nil {
+				return err
+			}
+		} else if a.Role == DeliveryPartner {
+			if err := s.autoAssignOrder(sc, a, &out); err != nil {
+				return err
+			}
 		}
+		rows := []Order{out}
+		if err := s.enrichOrderReservations(sc, rows); err != nil {
+			return err
+		}
+		out = rows[0]
 		return nil
 	})
 	return out, err
 }
 
 type TripInput struct {
+	Name              string   `json:"name"`
 	StartDate         string   `json:"startDate"`
 	WarehouseStaffIDs []string `json:"warehouseStaffIds"`
 	VehicleID         string   `json:"vehicleId"`
@@ -78,7 +91,12 @@ type TripInput struct {
 
 func (s *Store) CreateTrip(ctx context.Context, a Actor, in TripInput) (Trip, error) {
 	var out Trip
-	err := s.tx(ctx, a, []string{Admin, Manager}, func(sc mongo.SessionContext, _ Actor) error {
+	err := s.tx(ctx, a, []string{Admin, Manager, DeliveryPartner}, func(sc mongo.SessionContext, fresh Actor) error {
+		if fresh.Role == DeliveryPartner {
+			if err := s.validateRiderTrip(sc, fresh, &in); err != nil {
+				return err
+			}
+		}
 		var err error
 		out, err = s.createTrip(sc, in, s.now().UTC())
 		return err
@@ -87,6 +105,11 @@ func (s *Store) CreateTrip(ctx context.Context, a Actor, in TripInput) (Trip, er
 }
 func (s *Store) createTrip(sc mongo.SessionContext, in TripInput, now time.Time) (Trip, error) {
 	var out Trip
+	if in.Name != "" {
+		if err := validName(in.Name); err != nil {
+			return out, err
+		}
+	}
 	if len(in.OrderIDs) > 200 {
 		return out, apperr.Validation("A trip supports at most 200 orders")
 	}
@@ -117,20 +140,6 @@ func (s *Store) createTrip(sc mongo.SessionContext, in TripInput, now time.Time)
 	if u.Role != DeliveryPartner {
 		return out, apperr.Validation("deliveryPartnerId must identify a deliveryPartner")
 	}
-	n, err := s.col("trips").CountDocuments(sc, bson.M{"vehicleId": in.VehicleID, "vehicleReserved": true})
-	if err != nil {
-		return out, err
-	}
-	if n > 0 {
-		return out, apperr.Conflict("VEHICLE_BUSY", "Vehicle is already assigned to an unfinished trip")
-	}
-	n, err = s.col("stocks").CountDocuments(sc, bson.M{"locationId": in.VehicleID, "quantity": bson.M{"$ne": 0}})
-	if err != nil {
-		return out, err
-	}
-	if n > 0 {
-		return out, apperr.Conflict("VAN_NOT_EMPTY", "Vehicle must be empty before a new trip")
-	}
 	id, err := s.next(sc, "trip", "TRP-")
 	if err != nil {
 		return out, err
@@ -139,7 +148,10 @@ func (s *Store) createTrip(sc mongo.SessionContext, in TripInput, now time.Time)
 	if staffIDs == nil {
 		staffIDs = []string{}
 	}
-	out = Trip{TripSchedule: schedule, WarehouseStaffIDs: staffIDs, Base: s.base(), TripID: id, VehicleID: in.VehicleID, DeliveryPartnerID: in.DeliveryPartnerID, Status: "planned", Stops: []Stop{}, VehicleReserved: true}
+	out = Trip{Name: strings.TrimSpace(in.Name), TripSchedule: schedule, WarehouseStaffIDs: staffIDs, Base: s.base(), TripID: id, VehicleID: in.VehicleID, DeliveryPartnerID: in.DeliveryPartnerID, Status: "planned", Stops: []Stop{}, VehicleReserved: false}
+	if out.Name == "" {
+		out.Name = defaultTripName(id)
+	}
 	seen := map[string]bool{}
 	for _, oid := range in.OrderIDs {
 		if seen[oid] {
@@ -193,6 +205,12 @@ func (s *Store) Pickup(ctx context.Context, a Actor, tripID string, in PickupInp
 		if t.Status != "planned" && t.Status != "started" {
 			return apperr.Conflict("TRIP_NOT_OPEN", "Pickup requires a planned or started trip")
 		}
+		if err := s.claimTripVehicle(sc, &t); err != nil {
+			return err
+		}
+		if in.Order != nil && in.Order.TripID != "" && in.Order.TripID != tripID {
+			return apperr.Validation("New pickup order must use this trip")
+		}
 		if _, err := s.storage(sc, in.LocationID); err != nil {
 			return err
 		}
@@ -232,6 +250,9 @@ func (s *Store) Pickup(ctx context.Context, a Actor, tripID string, in PickupInp
 			if err := s.lock(sc, "variants", "variantId", it.VariantID, &v); err != nil {
 				return err
 			}
+			if err := s.checkOrderReservation(sc, o, it.VariantID, it.Quantity); err != nil {
+				return err
+			}
 			m, err := s.move(sc, a, it.VariantID, it.Quantity, in.LocationID, t.VehicleID, "pickup", o.OrderID, t.TripID, "")
 			if err != nil {
 				return err
@@ -248,7 +269,11 @@ func (s *Store) Pickup(ctx context.Context, a Actor, tripID string, in PickupInp
 		if err := s.update(sc, "orders", "orderId", o.OrderID, bson.M{"tripId": tripID, "status": "assigned", "picked": o.Picked}); err != nil {
 			return err
 		}
-		out.Order = o
+		rows := []Order{o}
+		if err := s.enrichOrderReservations(sc, rows); err != nil {
+			return err
+		}
+		out.Order = rows[0]
 		return nil
 	})
 	return out, err
@@ -276,6 +301,9 @@ func (s *Store) StartTrip(ctx context.Context, a Actor, id string) (Trip, error)
 			if !fullyPicked(o) {
 				return apperr.Conflict("ORDER_NOT_FULLY_PICKED", "Every order must be fully picked before the trip starts")
 			}
+		}
+		if err := s.claimTripVehicle(sc, &out); err != nil {
+			return err
 		}
 		out.Status = "started"
 		return s.update(sc, "trips", "tripId", id, bson.M{"status": out.Status})
@@ -504,6 +532,13 @@ func (s *Store) Settle(ctx context.Context, a Actor, id string, in SettlementInp
 		if t.Status != "completed" {
 			return apperr.Conflict("TRIP_NOT_COMPLETED", "Complete the trip before settlement")
 		}
+		if err := s.lockTripCashPartner(sc, id); err != nil {
+			return err
+		}
+		priorCash, salaryAdjusted, err := s.priorTripCash(sc, id)
+		if err != nil {
+			return err
+		}
 		cur, err := s.col("payments").Find(sc, bson.M{"tripId": id, "method": "cash"})
 		if err != nil {
 			return err
@@ -522,8 +557,8 @@ func (s *Store) Settle(ctx context.Context, a Actor, id string, in SettlementInp
 		}
 		collected := money(total)
 		handed := RoundMoney(*in.CashHandedOver)
-		difference := money(cents(handed) - cents(collected))
-		out = Settlement{id, collected, handed, difference, difference != 0, in.Note, a.UserID, s.now().UTC()}
+		difference := money(cents(handed) + cents(priorCash) + cents(salaryAdjusted) - cents(collected))
+		out = Settlement{TripID: id, CashCollected: collected, CashHandedOver: handed, PriorCashHandedOver: priorCash, SalaryAdjusted: salaryAdjusted, Difference: difference, HasDifference: difference != 0, Note: in.Note, SettledBy: a.UserID, CreatedAt: s.now().UTC()}
 		if err := insert(sc, s.col("settlements"), out); err != nil {
 			return err
 		}
@@ -536,7 +571,7 @@ func (s *Store) TripOrders(ctx context.Context, a Actor, id string, p Page) (Lis
 	if _, err := s.GetTrip(ctx, a, id); err != nil {
 		return List[Order]{}, err
 	}
-	return list[Order](ctx, s, "orders", bson.M{"tripId": id}, p, bson.D{{Key: "orderId", Value: 1}})
+	return s.reservedOrders(ctx, bson.M{"tripId": id}, p, bson.D{{Key: "orderId", Value: 1}})
 }
 func (s *Store) TripStock(ctx context.Context, a Actor, id string, p Page) (List[Stock], error) {
 	ctx = database.WithAccount(ctx, a.AccountID)

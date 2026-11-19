@@ -45,6 +45,7 @@ func (s *Store) CustomerOptions(ctx context.Context, a Actor, p Page) (List[Cust
 }
 
 type AssignOrderInput struct {
+	TripID            string `json:"tripId"`
 	DeliveryPartnerID string `json:"deliveryPartnerId"`
 	VehicleID         string `json:"vehicleId"`
 }
@@ -53,7 +54,7 @@ func validateOrderAssignment(orderID string, in AssignOrderInput) error {
 	if strings.TrimSpace(orderID) == "" {
 		return apperr.Validation("orderId is required")
 	}
-	if strings.TrimSpace(in.DeliveryPartnerID) == "" {
+	if strings.TrimSpace(in.DeliveryPartnerID) == "" && in.TripID == "" {
 		return apperr.Validation("deliveryPartnerId is required")
 	}
 	return nil
@@ -73,7 +74,29 @@ func (s *Store) AssignOrder(ctx context.Context, a Actor, orderID string, in Ass
 		if out.Status != "open" || out.TripID != "" || len(out.Picked) != 0 {
 			return apperr.Conflict("ORDER_ALREADY_ASSIGNED", "Only an open, unpicked order can be assigned")
 		}
-		return s.assignOrderToPartner(sc, in.DeliveryPartnerID, in.VehicleID, &out)
+		if in.TripID != "" {
+			var trip Trip
+			if err := s.find(sc, "trips", "tripId", in.TripID, &trip); err != nil {
+				return err
+			}
+			if in.DeliveryPartnerID != "" && trip.DeliveryPartnerID != in.DeliveryPartnerID {
+				return apperr.Validation("Trip belongs to a different delivery partner")
+			}
+			if in.VehicleID != "" && trip.VehicleID != in.VehicleID {
+				return apperr.Validation("Trip uses a different vehicle")
+			}
+			if err := s.attachOrderToTrip(sc, a, in.TripID, &out); err != nil {
+				return err
+			}
+		} else if err := s.assignOrderToPartner(sc, in.DeliveryPartnerID, in.VehicleID, &out); err != nil {
+			return err
+		}
+		rows := []Order{out}
+		if err := s.enrichOrderReservations(sc, rows); err != nil {
+			return err
+		}
+		out = rows[0]
+		return nil
 	})
 	return out, err
 }

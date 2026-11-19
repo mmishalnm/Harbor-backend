@@ -228,10 +228,43 @@ func (s *Server) register() {
 	s.add("POST", "/api/v1/orders/{id}/assign", admins, 200, body(func(a store.Actor, r *http.Request, in store.AssignOrderInput) (any, error) {
 		return s.Store.AssignOrder(r.Context(), a, r.PathValue("id"), in)
 	}))
+	s.add("GET", "/api/v1/trips/{id}/cash-summary", admins, 200, func(a store.Actor, r *http.Request) (any, error) {
+		return s.Store.TripCash(r.Context(), a, r.PathValue("id"))
+	})
+	s.add("GET", "/api/v1/partners/cash", admins, 200, func(a store.Actor, r *http.Request) (any, error) {
+		p, err := pagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return s.Store.PartnerCashList(r.Context(), a, p)
+	})
+	s.add("GET", "/api/v1/partners/{id}/cash", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
+		p, err := pagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return s.Store.PartnerCash(r.Context(), a, r.PathValue("id"), p)
+	})
+	s.add("POST", "/api/v1/partners/{id}/cash-settlements", admins, 201, body(func(a store.Actor, r *http.Request, in store.PartnerCashInput) (any, error) {
+		return s.Store.SettlePartnerCash(r.Context(), a, r.PathValue("id"), in)
+	}))
+	s.add("GET", "/api/v1/inventory/availability", admins, 200, func(a store.Actor, r *http.Request) (any, error) {
+		p, err := pagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return s.Store.InventoryAvailability(r.Context(), a, p)
+	})
+	s.add("POST", "/api/v1/orders/bulk-assign", drivers, 200, body(func(a store.Actor, r *http.Request, in store.BulkAssignOrdersInput) (any, error) {
+		return s.Store.BulkAssignOrders(r.Context(), a, in)
+	}))
+	s.add("POST", "/api/v1/orders/bulk-cancel", admins, 200, body(func(a store.Actor, r *http.Request, in store.BulkCancelOrdersInput) (any, error) {
+		return s.Store.BulkCancelOrders(r.Context(), a, in)
+	}))
 	s.add("POST", "/api/v1/orders", everyone, 201, body(func(a store.Actor, r *http.Request, in store.OrderInput) (any, error) {
 		return s.Store.CreateOrder(r.Context(), a, in)
 	}))
-	s.add("POST", "/api/v1/trips", admins, 201, body(func(a store.Actor, r *http.Request, in store.TripInput) (any, error) {
+	s.add("POST", "/api/v1/trips", drivers, 201, body(func(a store.Actor, r *http.Request, in store.TripInput) (any, error) {
 		return s.Store.CreateTrip(r.Context(), a, in)
 	}))
 	s.add("GET", "/api/v1/trips/{id}", everyone, 200, func(a store.Actor, r *http.Request) (any, error) {

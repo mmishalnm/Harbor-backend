@@ -51,17 +51,30 @@ func (s *Store) AssignTripStaff(ctx context.Context, a Actor, tripID string, ids
 }
 
 func (s *Store) restrictAssignedLists(ctx context.Context, a Actor, resource string, filter bson.M) error {
-	if a.LocationIDs == nil {
-		a.LocationIDs = []string{}
-	}
 	if a.Role == WarehouseStaff {
 		switch resource {
 		case "locations":
-			filter["locationId"] = bson.M{"$in": a.LocationIDs}
+			if len(a.LocationIDs) > 0 {
+				filter["locationId"] = bson.M{"$in": a.LocationIDs}
+			}
 		case "stocks":
+			locationIDs := a.LocationIDs
+			if len(locationIDs) == 0 {
+				// Unrestricted storage access must not expose other trips' van stock.
+				ids, err := s.col("locations").Distinct(ctx, "locationId", bson.M{})
+				if err != nil {
+					return err
+				}
+				locationIDs = []string{}
+				for _, id := range ids {
+					if value, ok := id.(string); ok {
+						locationIDs = append(locationIDs, value)
+					}
+				}
+			}
 			if id, ok := filter["locationId"].(string); ok {
 				allowed := false
-				for _, assigned := range a.LocationIDs {
+				for _, assigned := range locationIDs {
 					if assigned == id {
 						allowed = true
 					}
@@ -70,9 +83,12 @@ func (s *Store) restrictAssignedLists(ctx context.Context, a Actor, resource str
 					filter["locationId"] = bson.M{"$in": []string{}}
 				}
 			} else {
-				filter["locationId"] = bson.M{"$in": a.LocationIDs}
+				filter["locationId"] = bson.M{"$in": locationIDs}
 			}
 		case "warehouses":
+			if len(a.LocationIDs) == 0 {
+				break
+			}
 			ids, err := s.col("locations").Distinct(ctx, "warehouseId", bson.M{"locationId": bson.M{"$in": a.LocationIDs}})
 			if err != nil {
 				return err

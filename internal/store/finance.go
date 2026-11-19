@@ -130,6 +130,11 @@ func (s *Store) allocateCredit(sc mongo.SessionContext, customerID string) error
 }
 func (s *Store) recordPayment(sc mongo.SessionContext, a Actor, customerID, tripID string, amount float64, method string) (Payment, error) {
 	var out Payment
+	if tripID != "" {
+		if err := s.lockTripCashPartner(sc, tripID); err != nil {
+			return out, err
+		}
+	}
 	if err := validMoney(amount, false); err != nil {
 		return out, err
 	}

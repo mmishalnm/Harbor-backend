@@ -138,7 +138,8 @@ func TestMongoExpiredTripAndAdminDuration(t *testing.T) {
 	setAutoTrips(t, c, true, 3)
 	driver := loginAs(t, c, "driver")
 	in := store.OrderInput{CustomerID: f.customer.CustomerID, Items: order.Items}
-	wantError(t, driver, "POST", "/api/v1/orders", in, 409, "VEHICLE_BUSY")
+	planned := must[store.Order](t, driver, "POST", "/api/v1/orders", in, 201)
+	wantError(t, c, "POST", "/api/v1/trips/"+planned.TripID+"/pickup", store.PickupInput{OrderID: planned.OrderID, LocationID: f.location.LocationID, Items: planned.Items}, 409, "VEHICLE_BUSY")
 	must[store.CloseStopResult](t, driver, "POST", "/api/v1/trips/"+trip.TripID+"/stops/"+order.OrderID+"/close", store.CloseStopInput{Delivered: order.Items}, 200)
 	must[store.Trip](t, driver, "POST", "/api/v1/trips/"+trip.TripID+"/complete", nil, 200)
 	created := must[store.Order](t, driver, "POST", "/api/v1/orders", in, 201)

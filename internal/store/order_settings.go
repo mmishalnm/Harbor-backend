@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -99,7 +100,17 @@ func newTripSchedule(now time.Time, startDate string, days int) (TripSchedule, e
 
 // Old trips keep operating with a one-day window based on their creation date.
 // Scheduling never closes a trip or discards stock at midnight.
+func defaultTripName(id string) string {
+	n := strings.TrimLeft(strings.TrimPrefix(id, "TRP-"), "0")
+	if n == "" {
+		n = "1"
+	}
+	return "Trip " + n
+}
 func normalizeTrip(t *Trip) {
+	if t.Name == "" {
+		t.Name = defaultTripName(t.TripID)
+	}
 	if t.DurationDays == 0 {
 		t.DurationDays = 1
 	}

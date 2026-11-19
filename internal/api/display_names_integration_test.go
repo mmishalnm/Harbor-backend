@@ -25,8 +25,8 @@ func TestMongoDisplayNamesPreserveAccountAndAssignmentAccess(t *testing.T) {
 		return must[store.DisplayNamesResult](t, c, "POST", "/api/v1/display-names", store.DisplayNamesInput{IDs: ids}, 200).Names
 	}
 	before := resolve(sc, f.customer.CustomerID, f.location.LocationID, f.driver.UserID)
-	if len(before) != 0 {
-		t.Fatalf("unassigned staff saw labels: %v", before)
+	if len(before) != 1 || before[f.location.LocationID] != "Main Freezer · Kahakootam" {
+		t.Fatalf("unrestricted staff should see storage labels only: %v", before)
 	}
 	must[store.User](t, arun, "PUT", "/api/v1/users/"+staff.UserID+"/locations", map[string]any{"locationIds": []string{f.location.LocationID}}, 200)
 	must[store.Trip](t, arun, "PUT", "/api/v1/trips/"+trip.TripID+"/staff", map[string]any{"warehouseStaffIds": []string{staff.UserID}}, 200)

@@ -121,7 +121,12 @@ func (s *Store) storage(ctx mongo.SessionContext, id string) (Location, error) {
 	return l, err
 }
 func checkPickup(a Actor, locationID string) error {
-	if a.Role == Admin || a.Role == Manager {
+	if err := allow(a, Admin, Manager, WarehouseStaff, DeliveryPartner); err != nil {
+		return err
+	}
+	// An empty list means unrestricted storage access within the signed business.
+	// storage() still validates the location and warehouse before this check.
+	if a.Role == Admin || a.Role == Manager || len(a.LocationIDs) == 0 {
 		return nil
 	}
 	for _, id := range a.LocationIDs {
@@ -129,7 +134,7 @@ func checkPickup(a Actor, locationID string) error {
 			return nil
 		}
 	}
-	return apperr.Conflict("LOCATION_NOT_ASSIGNED", "Pickup requires assignment to the source location")
+	return apperr.Conflict("LOCATION_NOT_ASSIGNED", "Pickup is limited to your assigned locations")
 }
 func (s *Store) tripAccess(a Actor, t Trip) error {
 	if a.Role == WarehouseStaff {
@@ -215,12 +220,12 @@ func (s *Store) ListResources(ctx context.Context, a Actor, resource string, p P
 		}
 		return rows, err
 	case "orders":
-		return list[Order](ctx, s, resource, f, p, sort)
+		return s.reservedOrders(ctx, f, p, sort)
 	case "stocks":
 		if a.Role == DeliveryPartner {
 			return nil, apperr.Forbidden()
 		}
-		return list[Stock](ctx, s, resource, f, p, bson.D{{Key: "stockKey", Value: 1}})
+		return s.reservedStocks(ctx, f, p)
 	case "stockMovements":
 		if err := adminOnly(); err != nil {
 			return nil, err

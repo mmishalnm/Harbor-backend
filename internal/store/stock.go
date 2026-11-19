@@ -16,6 +16,11 @@ func (s *Store) move(sc mongo.SessionContext, a Actor, variantID string, quantit
 	if err := validItems([]Item{{variantID, quantity}}, false); err != nil {
 		return out, err
 	}
+	// Every physical stock mutation shares the variant lock with reservations.
+	var variant Variant
+	if err := s.lock(sc, "variants", "variantId", variantID, &variant); err != nil {
+		return out, err
+	}
 	if from == to || (from == "" && to == "") {
 		return out, apperr.Validation("Stock movement needs distinct source and destination")
 	}

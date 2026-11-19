@@ -120,3 +120,29 @@ func TestJWTValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestPickupLocationPermission(t *testing.T) {
+	for _, role := range []string{WarehouseStaff, DeliveryPartner} {
+		for _, ids := range [][]string{nil, {}, {"LOC-000001"}} {
+			actor := Actor{Role: role, LocationIDs: ids}
+			if err := checkPickup(actor, "LOC-000001"); err != nil {
+				t.Fatalf("allowed pickup rejected: %s %v %v", role, ids, err)
+			}
+			err := checkPickup(actor, "LOC-000002")
+			if len(ids) == 0 && err != nil {
+				t.Fatalf("empty assignments should allow all storage: %s %v", role, err)
+			}
+			if len(ids) > 0 && err == nil {
+				t.Fatalf("nonempty assignments bypassed: %s", role)
+			}
+		}
+	}
+	for _, role := range []string{Admin, Manager} {
+		if err := checkPickup(Actor{Role: role, LocationIDs: []string{"LOC-000001"}}, "LOC-000002"); err != nil {
+			t.Fatal("office override rejected", err)
+		}
+	}
+	if err := checkPickup(Actor{Role: "unknown"}, "LOC-000001"); err == nil {
+		t.Fatal("unknown role gained unrestricted pickup")
+	}
+}

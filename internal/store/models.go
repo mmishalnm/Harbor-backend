@@ -79,15 +79,20 @@ type Item struct {
 	Quantity  int64  `json:"quantity" bson:"quantity"`
 }
 type Order struct {
-	Base       `bson:",inline"`
-	OrderID    string `json:"orderId" bson:"orderId"`
-	CustomerID string `json:"customerId" bson:"customerId"`
-	Source     string `json:"source" bson:"source"`
-	Items      []Item `json:"items" bson:"items"`
-	Picked     []Item `json:"picked" bson:"picked"`
-	TripID     string `json:"tripId,omitempty" bson:"tripId"`
-	Status     string `json:"status" bson:"status"`
-	CreatedBy  string `json:"createdBy" bson:"createdBy"`
+	ReservedItems      []Item     `json:"reservedItems" bson:"-"`
+	AwaitingStockItems []Item     `json:"awaitingStockItems" bson:"-"`
+	CancelReason       string     `json:"cancelReason,omitempty" bson:"cancelReason,omitempty"`
+	CancelledBy        string     `json:"cancelledBy,omitempty" bson:"cancelledBy,omitempty"`
+	CancelledAt        *time.Time `json:"cancelledAt,omitempty" bson:"cancelledAt,omitempty"`
+	Base               `bson:",inline"`
+	OrderID            string `json:"orderId" bson:"orderId"`
+	CustomerID         string `json:"customerId" bson:"customerId"`
+	Source             string `json:"source" bson:"source"`
+	Items              []Item `json:"items" bson:"items"`
+	Picked             []Item `json:"picked" bson:"picked"`
+	TripID             string `json:"tripId,omitempty" bson:"tripId"`
+	Status             string `json:"status" bson:"status"`
+	CreatedBy          string `json:"createdBy" bson:"createdBy"`
 }
 type Stop struct {
 	OrderID   string     `json:"orderId" bson:"orderId"`
@@ -98,6 +103,7 @@ type Stop struct {
 	ClosedAt  *time.Time `json:"closedAt,omitempty" bson:"closedAt"`
 }
 type Trip struct {
+	Name              string `json:"name" bson:"name"`
 	TripSchedule      `bson:",inline"`
 	WarehouseStaffIDs []string `json:"warehouseStaffIds" bson:"warehouseStaffIds"`
 	Base              `bson:",inline"`
@@ -109,10 +115,12 @@ type Trip struct {
 	VehicleReserved   bool   `json:"-" bson:"vehicleReserved"`
 }
 type Stock struct {
-	StockKey   string `json:"stockKey" bson:"stockKey"`
-	LocationID string `json:"locationId" bson:"locationId"`
-	VariantID  string `json:"variantId" bson:"variantId"`
-	Quantity   int64  `json:"quantity" bson:"quantity"`
+	ReservedQuantity  int64  `json:"reservedQuantity" bson:"-"`
+	AvailableQuantity int64  `json:"availableQuantity" bson:"-"`
+	StockKey          string `json:"stockKey" bson:"stockKey"`
+	LocationID        string `json:"locationId" bson:"locationId"`
+	VariantID         string `json:"variantId" bson:"variantId"`
+	Quantity          int64  `json:"quantity" bson:"quantity"`
 }
 type Movement struct {
 	MovementID     string    `json:"movementId" bson:"movementId"`
@@ -165,14 +173,16 @@ type Allocation struct {
 	CreatedAt     time.Time `json:"createdAt" bson:"createdAt"`
 }
 type Settlement struct {
-	TripID         string    `json:"tripId" bson:"tripId"`
-	CashCollected  float64   `json:"cashCollected" bson:"cashCollected"`
-	CashHandedOver float64   `json:"cashHandedOver" bson:"cashHandedOver"`
-	Difference     float64   `json:"difference" bson:"difference"`
-	HasDifference  bool      `json:"hasDifference" bson:"hasDifference"`
-	Note           string    `json:"note" bson:"note"`
-	SettledBy      string    `json:"settledBy" bson:"settledBy"`
-	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`
+	PriorCashHandedOver float64   `json:"priorCashHandedOver" bson:"priorCashHandedOver"`
+	SalaryAdjusted      float64   `json:"salaryAdjusted" bson:"salaryAdjusted"`
+	TripID              string    `json:"tripId" bson:"tripId"`
+	CashCollected       float64   `json:"cashCollected" bson:"cashCollected"`
+	CashHandedOver      float64   `json:"cashHandedOver" bson:"cashHandedOver"`
+	Difference          float64   `json:"difference" bson:"difference"`
+	HasDifference       bool      `json:"hasDifference" bson:"hasDifference"`
+	Note                string    `json:"note" bson:"note"`
+	SettledBy           string    `json:"settledBy" bson:"settledBy"`
+	CreatedAt           time.Time `json:"createdAt" bson:"createdAt"`
 }
 type Page struct {
 	Page  int `json:"page"`

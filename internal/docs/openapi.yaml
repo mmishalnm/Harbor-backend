@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Harbor by Code Wayne",
-    "version": "1.4.0",
-    "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see assigned locations and trips; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
+    "version": "1.6.0",
+    "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
   },
   "servers": [
     {
@@ -1229,7 +1229,7 @@
           "admin",
           "manager"
         ],
-        "description": "Admin/manager only; users must be warehouse staff of the same business. A staff pickup requires both trip assignment and source location assignment.",
+        "description": "Admin/manager only; users must be warehouse staff of the same business. Staff must be assigned to the trip. A nonempty user location assignment restricts pickup to those locations; an empty assignment allows any active storage location in the same business.",
         "security": [
           {
             "bearerAuth": []
@@ -1258,6 +1258,7 @@
                   "isActive": true,
                   "createdAt": "2026-11-19T09:00:00Z",
                   "updatedAt": "2026-11-19T09:00:00Z",
+                  "name": "Morning run",
                   "tripDate": "2026-11-19",
                   "durationDays": 1,
                   "startsAt": "2026-11-18T18:30:00Z",
@@ -2664,7 +2665,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Allowed roles: admin, manager, warehouseStaff, deliveryPartner",
+        "description": "Allowed roles: admin, manager, warehouseStaff, deliveryPartner Warehouse staff with empty locationIds can browse all storage locations/warehouses in their own business; nonempty assignments restrict storage visibility. Storage stock excludes vehicle stock, which remains trip-scoped.",
         "security": [
           {
             "bearerAuth": []
@@ -3042,7 +3043,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Allowed roles: admin, manager, warehouseStaff, deliveryPartner",
+        "description": "Allowed roles: admin, manager, warehouseStaff, deliveryPartner Warehouse staff with empty locationIds can browse all storage locations/warehouses in their own business; nonempty assignments restrict storage visibility. Storage stock excludes vehicle stock, which remains trip-scoped.",
         "security": [
           {
             "bearerAuth": []
@@ -4681,6 +4682,17 @@
                         }
                       ],
                       "picked": [],
+                      "reservedItems": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "awaitingStockItems": [],
                       "status": "open",
                       "createdBy": "USR-000001"
                     }
@@ -4802,7 +4814,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Riders can create orders for customers in their own business. With autoAssignDeliveryPartnerOrders enabled, atomically add a pending stop to their current-window trip, or create a planned trip for today with the assigned vehicle. Started trips are preferred; remaining ties use earliest start/creation/ID. Missing vehicle, reserved van or a full current trip fails the whole request without creating an orphan order. With the setting disabled, orders remain open. Creating an order never moves stock.",
+        "description": "Riders can create orders for customers in their own business. With autoAssignDeliveryPartnerOrders enabled, atomically add a pending stop to their current-window trip, or create a planned trip for today with the assigned vehicle. Started trips are preferred; remaining ties use earliest start/creation/ID. Missing vehicle or a full current trip fails the whole request without creating an orphan order. With the setting disabled, orders remain open. Creating an order never moves physical stock. Unpicked open/assigned quantities reserve storage stock oldest order first. With 225 on hand and an order of 13, reserved is 13 and available is 212. Orders exceeding storage stock remain allowed, with awaitingStockItems until stock arrives. Optional tripId chooses a specific own trip instead of automatic assignment. Existing orders participate immediately; no migration is needed.",
         "security": [
           {
             "bearerAuth": []
@@ -4838,6 +4850,17 @@
                         }
                       ],
                       "picked": [],
+                      "reservedItems": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "awaitingStockItems": [],
                       "status": "open",
                       "createdBy": "USR-000001"
                     }
@@ -4861,6 +4884,17 @@
                         }
                       ],
                       "picked": [],
+                      "reservedItems": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "awaitingStockItems": [],
                       "status": "assigned",
                       "createdBy": "USR-000003",
                       "tripId": "TRP-000001"
@@ -5114,6 +5148,7 @@
                       "isActive": true,
                       "createdAt": "2026-11-19T09:00:00Z",
                       "updatedAt": "2026-11-19T09:00:00Z",
+                      "name": "Morning run",
                       "tripDate": "2026-11-19",
                       "durationDays": 1,
                       "startsAt": "2026-11-18T18:30:00Z",
@@ -5247,9 +5282,10 @@
         ],
         "x-roles": [
           "admin",
-          "manager"
+          "manager",
+          "deliveryPartner"
         ],
-        "description": "Allowed roles: admin, manager",
+        "description": "Admin/manager may plan trips for any active partner/vehicle in their business. Delivery partners may create today's trips for themselves using a visible assigned/default vehicle and only their own open orders; cannot assign warehouse staff. Multiple trips on the same day, including the same van, are allowed. Planning does not claim stock or the van. First pickup claims exclusive vehicle use until completion. The van must be empty before another trip loads. Date/duration follow the business Indian calendar policy.",
         "security": [
           {
             "bearerAuth": []
@@ -5269,6 +5305,7 @@
                   "isActive": true,
                   "createdAt": "2026-11-19T09:00:00Z",
                   "updatedAt": "2026-11-19T09:00:00Z",
+                  "name": "Morning run",
                   "tripDate": "2026-11-19",
                   "durationDays": 1,
                   "startsAt": "2026-11-18T18:30:00Z",
@@ -5438,7 +5475,7 @@
           "manager",
           "warehouseStaff"
         ],
-        "description": "Allowed roles: admin, manager, warehouseStaff",
+        "description": "Allowed roles: admin, manager, warehouseStaff Warehouse staff with empty locationIds can browse all storage locations/warehouses in their own business; nonempty assignments restrict storage visibility. Storage stock excludes vehicle stock, which remains trip-scoped.",
         "security": [
           {
             "bearerAuth": []
@@ -5530,7 +5567,9 @@
                       "stockKey": "LOC-000001:MVN-000001",
                       "locationId": "LOC-000001",
                       "variantId": "MVN-000001",
-                      "quantity": 100
+                      "quantity": 225,
+                      "reservedQuantity": 13,
+                      "availableQuantity": 212
                     }
                   ],
                   "page": 1,
@@ -6795,7 +6834,9 @@
                       "hasDifference": true,
                       "note": "50 short",
                       "settledBy": "USR-000001",
-                      "createdAt": "2026-11-19T09:00:00Z"
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "priorCashHandedOver": 0,
+                      "salaryAdjusted": 0
                     }
                   ],
                   "page": 1,
@@ -7077,7 +7118,7 @@
           "admin",
           "manager"
         ],
-        "description": "Admin/manager only. Atomically attaches an open, unpicked order to the selected active delivery partner's current-window trip. Started trips are preferred, then earliest planned trip; optional vehicleId restricts matching to that van. If none exists, creates today's planned trip using the selected or default vehicle and the business trip duration. Works even when automatic rider-order assignment is disabled. All references are scoped to the signed business. Assignment never moves stock. Already assigned/closed orders cannot be reassigned. Missing vehicle, busy/nonempty van or full trip rolls back the whole operation. The partner then sees the assigned order in their own trip.",
+        "description": "Admin/manager only. Atomically attaches an open, unpicked order to the selected active delivery partner's current-window trip. Started trips are preferred, then earliest planned trip; optional vehicleId restricts matching to that van. If none exists, creates today's planned trip using the selected or default vehicle and the business trip duration. Works even when automatic rider-order assignment is disabled. All references are scoped to the signed business. Assignment never moves stock. Already assigned/closed orders cannot be reassigned. An explicit tripId targets that trip instead of automatic selection; mismatched partner/vehicle is invalid. Missing vehicle or full trip rolls back the whole operation. Van use is claimed at pickup, so a new planned trip may wait for an earlier loaded trip. The partner then sees the assigned order in their own trip.",
         "security": [
           {
             "bearerAuth": []
@@ -7120,6 +7161,17 @@
                     }
                   ],
                   "picked": [],
+                  "reservedItems": [
+                    {
+                      "variantId": "MVN-000001",
+                      "quantity": 20
+                    },
+                    {
+                      "variantId": "MVN-000002",
+                      "quantity": 5
+                    }
+                  ],
+                  "awaitingStockItems": [],
                   "status": "assigned",
                   "createdBy": "USR-000001",
                   "tripId": "TRP-000001"
@@ -7214,14 +7266,6 @@
                         "message": "Choose a vehicle or assign a default vehicle to the delivery partner before creating a trip"
                       }
                     }
-                  },
-                  "vehicleBusy": {
-                    "value": {
-                      "error": {
-                        "code": "VEHICLE_BUSY",
-                        "message": "Vehicle is already assigned to an unfinished trip"
-                      }
-                    }
                   }
                 }
               }
@@ -7270,6 +7314,1280 @@
               "example": {
                 "deliveryPartnerId": "USR-000003",
                 "vehicleId": "VEH-000001"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/cash": {
+      "get": {
+        "summary": "Cash held and collections by delivery partner",
+        "operationId": "GET_api_v1_partners_cash",
+        "tags": [
+          "partners"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Paginated delivery partners in the signed business, including archived partners with outstanding obligations. Computed from trip payments, actual trip cash handovers and immutable partner cash entries. Total collections include cash/UPI/bank; only cash affects cashHeld. Over-handovers are shown separately. No editable balance.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerCashList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "partnerId": "USR-000003",
+                      "name": "Delivery Partner",
+                      "isActive": true,
+                      "totalCollected": 4000,
+                      "cashCollected": 3500,
+                      "upiCollected": 500,
+                      "bankCollected": 0,
+                      "cashHandedOver": 1000,
+                      "salaryAdjusted": 500,
+                      "cashHeld": 2000,
+                      "overHanded": 0
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/{id}/cash": {
+      "get": {
+        "summary": "Partner cash ledger and salary adjustments",
+        "operationId": "GET_api_v1_partners_id_cash",
+        "tags": [
+          "partners"
+        ],
+        "x-roles": [
+          "admin",
+          "manager",
+          "deliveryPartner"
+        ],
+        "description": "Admin/manager may read any partner in their business. A partner may read only their own ledger. History is paginated newest first; summary totals cover all history. Includes note/reference, gross salary and computed salary payable where supplied. Customer invoices and balances are unaffected by cash settlement.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerCashLedger"
+                },
+                "example": {
+                  "summary": {
+                    "partnerId": "USR-000003",
+                    "name": "Delivery Partner",
+                    "isActive": true,
+                    "totalCollected": 4000,
+                    "cashCollected": 3500,
+                    "upiCollected": 500,
+                    "bankCollected": 0,
+                    "cashHandedOver": 1000,
+                    "salaryAdjusted": 500,
+                    "cashHeld": 2000,
+                    "overHanded": 0
+                  },
+                  "items": [
+                    {
+                      "entryId": "PAY-000003",
+                      "kind": "salaryAdjustment",
+                      "amount": -500,
+                      "method": "salaryAdjustment",
+                      "note": "Adjusted against November salary",
+                      "reference": "November 2026 salary",
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "salaryDue": 10000,
+                      "salaryPayable": 9500
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/{id}/cash-settlements": {
+      "post": {
+        "summary": "Settle held cash by handover or salary adjustment with note",
+        "operationId": "POST_api_v1_partners_id_cash-settlements",
+        "tags": [
+          "partners"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Transactional, append-only record. Note and requestId are required. Amount must not exceed cash currently held. Allocates to oldest outstanding trip cash first. cashHandover records actual money returned; salaryAdjustment records offset against salary without claiming cash was handed over. Optional salaryDue yields salaryPayable = salaryDue - amount. No customer payment/invoice/allocation is changed. Reusing the same requestId and details returns the original entry without a second deduction; changed details return IDEMPOTENCY_CONFLICT. Shared partner locking prevents concurrent over-settlement. Archived partners can still be settled.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerCashResult"
+                },
+                "example": {
+                  "entry": {
+                    "entryId": "PAY-000003",
+                    "partnerId": "USR-000003",
+                    "amount": 500,
+                    "method": "salaryAdjustment",
+                    "note": "Adjusted against November salary",
+                    "reference": "November 2026 salary",
+                    "requestId": "cash-settlement-example-0001",
+                    "salaryDue": 10000,
+                    "salaryPayable": 9500,
+                    "allocations": [
+                      {
+                        "tripId": "TRP-000001",
+                        "amount": 500
+                      }
+                    ],
+                    "recordedBy": "USR-000001",
+                    "createdAt": "2026-11-19T09:00:00Z"
+                  },
+                  "summary": {
+                    "partnerId": "USR-000003",
+                    "name": "Delivery Partner",
+                    "isActive": true,
+                    "totalCollected": 4000,
+                    "cashCollected": 3500,
+                    "upiCollected": 500,
+                    "bankCollected": 0,
+                    "cashHandedOver": 1000,
+                    "salaryAdjusted": 500,
+                    "cashHeld": 2000,
+                    "overHanded": 0
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "CASH_HOLDING_EXCEEDED",
+                    "message": "Settlement amount exceeds the cash currently held by this partner"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerCashInput"
+              },
+              "example": {
+                "amount": 500,
+                "method": "salaryAdjustment",
+                "note": "Adjusted against November salary",
+                "reference": "November 2026 salary",
+                "requestId": "cash-settlement-example-0001",
+                "salaryDue": 10000
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trips/{id}/cash-summary": {
+      "get": {
+        "summary": "Cash remaining after earlier handovers and salary adjustments",
+        "operationId": "GET_api_v1_trips_id_cash-summary",
+        "tags": [
+          "trips"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Snapshot-consistent cash accounting for a trip in the signed business. remainingCash excludes digital payments and all recorded handovers/salary offsets. Use before final trip settlement to enter only the additional cash being handed over.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripCashSummary"
+                },
+                "example": {
+                  "cashCollected": 3500,
+                  "priorCashHandedOver": 1000,
+                  "salaryAdjusted": 500,
+                  "tripCashHandedOver": 0,
+                  "remainingCash": 2000
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/availability": {
+      "get": {
+        "summary": "Storage stock: on hand, reserved, available and awaiting stock",
+        "operationId": "GET_api_v1_inventory_availability",
+        "tags": [
+          "inventory"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Snapshot-consistent computed inventory for active storage locations/warehouses and active variants in the signed business. Excludes vehicle stock. Totals cover all variants, not only the requested page. Open/assigned unpicked demand reserves oldest order first; shortages appear as awaitingStockQuantity. Existing orders are included. Physical quantity changes only through move(). Scoped storage rows are also available through GET /stocks with reservedQuantity and availableQuantity.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "variantId": "MVN-000001",
+                      "onHandQuantity": 225,
+                      "reservedQuantity": 13,
+                      "availableQuantity": 212,
+                      "awaitingStockQuantity": 0
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1,
+                  "totals": {
+                    "onHandQuantity": 225,
+                    "reservedQuantity": 13,
+                    "availableQuantity": 212,
+                    "awaitingStockQuantity": 0
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/bulk-assign": {
+      "post": {
+        "summary": "Assign up to 200 open orders to one trip atomically",
+        "operationId": "POST_api_v1_orders_bulk-assign",
+        "tags": [
+          "orders"
+        ],
+        "x-roles": [
+          "admin",
+          "manager",
+          "deliveryPartner"
+        ],
+        "description": "All-or-nothing transaction. Admin/manager may choose a partner (reuse/create trip) or an explicit tripId. Riders must choose their own tripId and may attach only orders they created. A failed order, duplicate ID, mismatched partner/vehicle or trip capacity error rolls back every assignment and any newly created trip. Does not move physical stock or release reservations.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkOrdersResult"
+                },
+                "example": {
+                  "orders": [
+                    {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "orderId": "ORD-000001",
+                      "customerId": "CUS-000001",
+                      "source": "phone",
+                      "items": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "picked": [],
+                      "reservedItems": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "awaitingStockItems": [],
+                      "status": "assigned",
+                      "createdBy": "USR-000001",
+                      "tripId": "TRP-000001"
+                    }
+                  ],
+                  "tripId": "TRP-000001"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAssignOrdersInput"
+              },
+              "example": {
+                "orderIds": [
+                  "ORD-000001",
+                  "ORD-000002"
+                ],
+                "tripId": "TRP-000001"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/bulk-cancel": {
+      "post": {
+        "summary": "Cancel up to 200 open unassigned orders and release reservations",
+        "operationId": "POST_api_v1_orders_bulk-cancel",
+        "tags": [
+          "orders"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "All-or-nothing transaction. Only open, unassigned, unpicked orders can be cancelled. Requires a reason; records actor and time, keeps the orders, and releases their computed reservations. Assigned/picked orders return ORDER_NOT_CANCELLABLE. Never retries cash or delivery operations.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkOrdersResult"
+                },
+                "example": {
+                  "orders": [
+                    {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "orderId": "ORD-000001",
+                      "customerId": "CUS-000001",
+                      "source": "phone",
+                      "items": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "picked": [],
+                      "reservedItems": [],
+                      "awaitingStockItems": [],
+                      "status": "cancelled",
+                      "createdBy": "USR-000001",
+                      "cancelReason": "Customer cancelled before assignment",
+                      "cancelledBy": "USR-000001",
+                      "cancelledAt": "2026-11-19T09:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "ORDER_NOT_CANCELLABLE",
+                    "message": "Only open, unassigned and unpicked orders can be cancelled"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCancelOrdersInput"
+              },
+              "example": {
+                "orderIds": [
+                  "ORD-000001",
+                  "ORD-000002"
+                ],
+                "reason": "Customer cancelled before assignment"
               }
             }
           }
@@ -7464,7 +8782,7 @@
           "admin",
           "manager"
         ],
-        "description": "Allowed roles: admin, manager",
+        "description": "Admin/manager only. A nonempty locationIds list restricts staff/partner pickup to those locations. Send [] to allow pickup from any active storage location in this business. An empty list does not grant access to other trips or business accounts. Null or omitted locationIds is invalid. Existing login tokens use fresh assignments on every request.",
         "security": [
           {
             "bearerAuth": []
@@ -7489,18 +8807,35 @@
                 "schema": {
                   "$ref": "#/components/schemas/User"
                 },
-                "example": {
-                  "isActive": true,
-                  "createdAt": "2026-11-19T09:00:00Z",
-                  "updatedAt": "2026-11-19T09:00:00Z",
-                  "accountId": "ACC-000001",
-                  "userId": "USR-000002",
-                  "name": "Freezer Staff",
-                  "username": "arun.freezerstaff",
-                  "role": "warehouseStaff",
-                  "locationIds": [
-                    "LOC-000001"
-                  ]
+                "examples": {
+                  "restricted": {
+                    "value": {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "accountId": "ACC-000001",
+                      "userId": "USR-000002",
+                      "name": "Freezer Staff",
+                      "username": "arun.freezerstaff",
+                      "role": "warehouseStaff",
+                      "locationIds": [
+                        "LOC-000001"
+                      ]
+                    }
+                  },
+                  "unrestricted": {
+                    "value": {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "accountId": "ACC-000001",
+                      "userId": "USR-000002",
+                      "name": "Freezer Staff",
+                      "username": "arun.freezerstaff",
+                      "role": "warehouseStaff",
+                      "locationIds": []
+                    }
+                  }
                 }
               }
             }
@@ -7647,7 +8982,7 @@
           "manager",
           "warehouseStaff"
         ],
-        "description": "Storage locations only. Pickups require assignment unless admin or manager. Vehicle stock changes only through trip operations.",
+        "description": "Storage locations only. Source access is unrestricted when the staff location assignment is empty; otherwise it is limited to assigned locations. Admin/manager may use any active storage location in their business. Vehicle stock changes only through trip operations.",
         "security": [
           {
             "bearerAuth": []
@@ -7819,7 +9154,7 @@
           "manager",
           "warehouseStaff"
         ],
-        "description": "Storage locations only. Pickups require assignment unless admin or manager. Vehicle stock changes only through trip operations.",
+        "description": "Storage locations only. Source access is unrestricted when the staff location assignment is empty; otherwise it is limited to assigned locations. Admin/manager may use any active storage location in their business. Vehicle stock changes only through trip operations.",
         "security": [
           {
             "bearerAuth": []
@@ -7992,7 +9327,7 @@
           "admin",
           "manager"
         ],
-        "description": "Storage locations only. Pickups require assignment unless admin or manager. Vehicle stock changes only through trip operations.",
+        "description": "Storage locations only. Source access is unrestricted when the staff location assignment is empty; otherwise it is limited to assigned locations. Admin/manager may use any active storage location in their business. Vehicle stock changes only through trip operations.",
         "security": [
           {
             "bearerAuth": []
@@ -8194,6 +9529,7 @@
                   "isActive": true,
                   "createdAt": "2026-11-19T09:00:00Z",
                   "updatedAt": "2026-11-19T09:00:00Z",
+                  "name": "Morning run",
                   "tripDate": "2026-11-19",
                   "durationDays": 1,
                   "startsAt": "2026-11-18T18:30:00Z",
@@ -8402,6 +9738,17 @@
                           "quantity": 5
                         }
                       ],
+                      "reservedItems": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 20
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "quantity": 5
+                        }
+                      ],
+                      "awaitingStockItems": [],
                       "status": "assigned",
                       "createdBy": "USR-000001",
                       "tripId": "TRP-000001"
@@ -8577,7 +9924,9 @@
                       "stockKey": "VEH-000001:MVN-000001",
                       "locationId": "VEH-000001",
                       "variantId": "MVN-000001",
-                      "quantity": 20
+                      "quantity": 20,
+                      "reservedQuantity": 0,
+                      "availableQuantity": 0
                     }
                   ],
                   "page": 1,
@@ -8699,7 +10048,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Planned or started trip only. Provide either orderId or a new order. Late orders can be picked after departure; goods still move from an authorized storage location into the van. Warehouse staff must be assigned to the trip and source location. Other pickups require source assignment unless admin/manager. Partners may access only their own trip.",
+        "description": "Planned or started trip only. Provide either orderId or a new order. Late orders can be picked after departure; goods still move from an authorized storage location into the van. Warehouse staff must be assigned to the trip. Staff/partners with no assigned locations can pick up from any active storage location in their business. With one or more assignments they can pick up only from those locations (LOCATION_NOT_ASSIGNED otherwise). Admin/manager may use any active storage location in their business. Missing/inactive/foreign locations remain unavailable. Pickup atomically consumes this order\u2019s oldest-first reservation and claims exclusive vehicle use. It cannot consume stock reserved for older orders. Another loaded trip on this van returns VEHICLE_BUSY; unused planned trips may share a van. Partners may access only their own trip.",
         "security": [
           {
             "bearerAuth": []
@@ -8753,6 +10102,17 @@
                         "quantity": 5
                       }
                     ],
+                    "reservedItems": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 20
+                      },
+                      {
+                        "variantId": "MVN-000002",
+                        "quantity": 5
+                      }
+                    ],
+                    "awaitingStockItems": [],
                     "status": "assigned",
                     "createdBy": "USR-000001",
                     "tripId": "TRP-000001"
@@ -8860,10 +10220,30 @@
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 },
-                "example": {
-                  "error": {
-                    "code": "INSUFFICIENT_STOCK",
-                    "message": "Source location has insufficient stock"
+                "examples": {
+                  "restrictedLocation": {
+                    "value": {
+                      "error": {
+                        "code": "LOCATION_NOT_ASSIGNED",
+                        "message": "Pickup is limited to your assigned locations"
+                      }
+                    }
+                  },
+                  "insufficientStock": {
+                    "value": {
+                      "error": {
+                        "code": "INSUFFICIENT_STOCK",
+                        "message": "Source location has insufficient stock"
+                      }
+                    }
+                  },
+                  "busyVan": {
+                    "value": {
+                      "error": {
+                        "code": "VEHICLE_BUSY",
+                        "message": "Finish the van's loaded trip before picking another trip"
+                      }
+                    }
                   }
                 }
               }
@@ -8969,6 +10349,7 @@
                   "isActive": true,
                   "createdAt": "2026-11-19T09:00:00Z",
                   "updatedAt": "2026-11-19T09:00:00Z",
+                  "name": "Morning run",
                   "tripDate": "2026-11-19",
                   "durationDays": 1,
                   "startsAt": "2026-11-18T18:30:00Z",
@@ -9567,6 +10948,7 @@
                   "isActive": true,
                   "createdAt": "2026-11-19T09:00:00Z",
                   "updatedAt": "2026-11-19T09:00:00Z",
+                  "name": "Morning run",
                   "tripDate": "2026-11-19",
                   "durationDays": 1,
                   "startsAt": "2026-11-18T18:30:00Z",
@@ -9711,7 +11093,7 @@
           "admin",
           "manager"
         ],
-        "description": "Allowed roles: admin, manager",
+        "description": "cashHandedOver is additional physical cash returned at this final trip settlement. Difference includes earlier partner cash handovers and salary offsets allocated to this trip. It does not count the same salary offset or handover twice. Read cash-summary first. Original collections and customer balances remain unchanged.",
         "security": [
           {
             "bearerAuth": []
@@ -9744,7 +11126,9 @@
                   "hasDifference": true,
                   "note": "50 short",
                   "settledBy": "USR-000001",
-                  "createdAt": "2026-11-19T09:00:00Z"
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "priorCashHandedOver": 0,
+                  "salaryAdjusted": 0
                 }
               }
             }
@@ -12213,7 +13597,8 @@
             "items": {
               "type": "string"
             },
-            "maxItems": 200
+            "maxItems": 200,
+            "description": "Empty array allows pickup from any active storage location in this business. A nonempty list restricts pickup to those locations."
           }
         },
         "required": [
@@ -12570,26 +13955,128 @@
           "quantity": {
             "type": "integer",
             "format": "int64",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Physical on-hand quantity; changes only through stock movements."
+          },
+          "reservedQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "description": "Computed storage reservation, not an editable field."
+          },
+          "availableQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "description": "Unreserved storage quantity. Trip vehicle stock uses quantity instead."
           }
         },
         "required": [
           "stockKey",
           "locationId",
           "variantId",
-          "quantity"
+          "quantity",
+          "reservedQuantity",
+          "availableQuantity"
         ],
         "example": {
           "stockKey": "LOC-000001:MVN-000001",
           "locationId": "LOC-000001",
           "variantId": "MVN-000001",
-          "quantity": 100
+          "quantity": 225,
+          "reservedQuantity": 13,
+          "availableQuantity": 212
+        }
+      },
+      "AvailabilityTotals": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "onHandQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reservedQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "availableQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "awaitingStockQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "onHandQuantity",
+          "reservedQuantity",
+          "availableQuantity",
+          "awaitingStockQuantity"
+        ],
+        "example": {
+          "onHandQuantity": 225,
+          "reservedQuantity": 13,
+          "availableQuantity": 212,
+          "awaitingStockQuantity": 0
+        }
+      },
+      "Availability": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "variantId": {
+            "type": "string"
+          },
+          "onHandQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reservedQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "availableQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "awaitingStockQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "variantId",
+          "onHandQuantity",
+          "reservedQuantity",
+          "availableQuantity",
+          "awaitingStockQuantity"
+        ],
+        "example": {
+          "variantId": "MVN-000001",
+          "onHandQuantity": 225,
+          "reservedQuantity": 13,
+          "availableQuantity": 212,
+          "awaitingStockQuantity": 0
         }
       },
       "OrderInput": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "tripId": {
+            "type": "string",
+            "description": "Optional explicit planned/started trip. Riders can choose only their own trip; overrides automatic trip selection."
+          },
           "customerId": {
             "type": "string"
           },
@@ -12651,6 +14138,9 @@
           "orderId": {
             "type": "string"
           },
+          "tripId": {
+            "type": "string"
+          },
           "customerId": {
             "type": "string"
           },
@@ -12681,8 +14171,30 @@
             },
             "maxItems": 200
           },
-          "tripId": {
+          "reservedItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "maxItems": 200
+          },
+          "awaitingStockItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "maxItems": 200
+          },
+          "cancelReason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "cancelledBy": {
             "type": "string"
+          },
+          "cancelledAt": {
+            "type": "string",
+            "format": "date-time"
           },
           "status": {
             "type": "string"
@@ -12721,6 +14233,17 @@
             }
           ],
           "picked": [],
+          "reservedItems": [
+            {
+              "variantId": "MVN-000001",
+              "quantity": 20
+            },
+            {
+              "variantId": "MVN-000002",
+              "quantity": 5
+            }
+          ],
+          "awaitingStockItems": [],
           "status": "open",
           "createdBy": "USR-000001"
         }
@@ -12729,6 +14252,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "tripId": {
+            "type": "string",
+            "description": "Optional explicit trip instead of automatic trip selection."
+          },
           "deliveryPartnerId": {
             "type": "string"
           },
@@ -12737,13 +14264,22 @@
             "description": "Optional specific vehicle. Otherwise reuse the partner's current trip, or create a trip using their default vehicle."
           }
         },
-        "required": [
-          "deliveryPartnerId"
-        ],
         "example": {
           "deliveryPartnerId": "USR-000003",
           "vehicleId": "VEH-000001"
-        }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "tripId"
+            ]
+          },
+          {
+            "required": [
+              "deliveryPartnerId"
+            ]
+          }
+        ]
       },
       "Stop": {
         "type": "object",
@@ -12795,6 +14331,12 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Optional readable name, e.g. Morning run. Defaults to a distinct Trip number."
+          },
           "startDate": {
             "type": "string",
             "format": "date",
@@ -12821,10 +14363,6 @@
             "maxItems": 200
           }
         },
-        "required": [
-          "vehicleId",
-          "deliveryPartnerId"
-        ],
         "example": {
           "vehicleId": "VEH-000001",
           "deliveryPartnerId": "USR-000003",
@@ -12834,7 +14372,8 @@
           "warehouseStaffIds": [
             "USR-000002"
           ]
-        }
+        },
+        "description": "Admin/manager must supply vehicleId and deliveryPartnerId. Riders may omit them to use their assigned vehicle and own identity; may only plan today, choose visible assigned vehicles, and add their own open orders. Riders cannot assign warehouse staff."
       },
       "Trip": {
         "type": "object",
@@ -12850,6 +14389,11 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
           },
           "tripDate": {
             "type": "string",
@@ -12905,6 +14449,7 @@
           "isActive",
           "createdAt",
           "updatedAt",
+          "name",
           "tripDate",
           "durationDays",
           "startsAt",
@@ -12920,6 +14465,7 @@
           "isActive": true,
           "createdAt": "2026-11-19T09:00:00Z",
           "updatedAt": "2026-11-19T09:00:00Z",
+          "name": "Morning run",
           "tripDate": "2026-11-19",
           "durationDays": 1,
           "startsAt": "2026-11-18T18:30:00Z",
@@ -13055,6 +14601,17 @@
                 "quantity": 5
               }
             ],
+            "reservedItems": [
+              {
+                "variantId": "MVN-000001",
+                "quantity": 20
+              },
+              {
+                "variantId": "MVN-000002",
+                "quantity": 5
+              }
+            ],
+            "awaitingStockItems": [],
             "status": "assigned",
             "createdBy": "USR-000001",
             "tripId": "TRP-000001"
@@ -13575,7 +15132,7 @@
           "difference": {
             "type": "number",
             "format": "double",
-            "description": "cashHandedOver minus cashCollected; negative means shortage"
+            "description": "Additional cashHandedOver plus priorCashHandedOver plus salaryAdjusted minus cashCollected; negative means shortage"
           },
           "hasDifference": {
             "type": "boolean"
@@ -13590,6 +15147,18 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "priorCashHandedOver": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "salaryAdjusted": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
           }
         },
         "required": [
@@ -13610,7 +15179,9 @@
           "hasDifference": true,
           "note": "50 short",
           "settledBy": "USR-000001",
-          "createdAt": "2026-11-19T09:00:00Z"
+          "createdAt": "2026-11-19T09:00:00Z",
+          "priorCashHandedOver": 0,
+          "salaryAdjusted": 0
         }
       },
       "LedgerEntry": {
@@ -13771,6 +15342,556 @@
           "total": 2
         }
       },
+      "PartnerCashSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "partnerId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "totalCollected": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "cashCollected": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "upiCollected": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "bankCollected": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "cashHandedOver": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "salaryAdjusted": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "cashHeld": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "overHanded": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          }
+        },
+        "required": [
+          "partnerId",
+          "name",
+          "isActive",
+          "totalCollected",
+          "cashCollected",
+          "upiCollected",
+          "bankCollected",
+          "cashHandedOver",
+          "salaryAdjusted",
+          "cashHeld",
+          "overHanded"
+        ],
+        "example": {
+          "partnerId": "USR-000003",
+          "name": "Delivery Partner",
+          "isActive": true,
+          "totalCollected": 4000,
+          "cashCollected": 3500,
+          "upiCollected": 500,
+          "bankCollected": 0,
+          "cashHandedOver": 1000,
+          "salaryAdjusted": 500,
+          "cashHeld": 2000,
+          "overHanded": 0
+        }
+      },
+      "CashAllocation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tripId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          }
+        },
+        "required": [
+          "tripId",
+          "amount"
+        ],
+        "example": {
+          "tripId": "TRP-000001",
+          "amount": 500
+        }
+      },
+      "PartnerCashInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.01,
+            "maximum": 1000000000
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cashHandover",
+              "salaryAdjustment"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "requestId": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "description": "Client-generated immutable idempotency key. Reuse only to retry this exact settlement."
+          },
+          "salaryDue": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000,
+            "description": "Optional, salaryAdjustment only. Must cover the adjustment; salaryPayable is computed on the server."
+          }
+        },
+        "required": [
+          "amount",
+          "method",
+          "note",
+          "requestId"
+        ],
+        "example": {
+          "amount": 500,
+          "method": "salaryAdjustment",
+          "note": "Adjusted against November salary",
+          "reference": "November 2026 salary",
+          "requestId": "cash-settlement-example-0001",
+          "salaryDue": 10000
+        }
+      },
+      "PartnerCashEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entryId": {
+            "type": "string"
+          },
+          "partnerId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.01,
+            "maximum": 1000000000
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cashHandover",
+              "salaryAdjustment"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "requestId": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "description": "Client-generated immutable idempotency key. Reuse only to retry this exact settlement."
+          },
+          "salaryDue": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000,
+            "description": "Optional, salaryAdjustment only. Must cover the adjustment; salaryPayable is computed on the server."
+          },
+          "salaryPayable": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashAllocation"
+            }
+          },
+          "recordedBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "entryId",
+          "partnerId",
+          "amount",
+          "method",
+          "note",
+          "requestId",
+          "allocations",
+          "recordedBy",
+          "createdAt"
+        ],
+        "example": {
+          "entryId": "PAY-000003",
+          "partnerId": "USR-000003",
+          "amount": 500,
+          "method": "salaryAdjustment",
+          "note": "Adjusted against November salary",
+          "reference": "November 2026 salary",
+          "requestId": "cash-settlement-example-0001",
+          "salaryDue": 10000,
+          "salaryPayable": 9500,
+          "allocations": [
+            {
+              "tripId": "TRP-000001",
+              "amount": 500
+            }
+          ],
+          "recordedBy": "USR-000001",
+          "createdAt": "2026-11-19T09:00:00Z"
+        }
+      },
+      "PartnerCashHistory": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "recordedBy": {
+            "type": "string"
+          },
+          "entryId": {
+            "type": "string"
+          },
+          "tripId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "method": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "reference": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "salaryDue": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "salaryPayable": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          }
+        },
+        "required": [
+          "entryId",
+          "kind",
+          "amount",
+          "method",
+          "note",
+          "createdAt"
+        ],
+        "example": {
+          "entryId": "PAY-000003",
+          "kind": "salaryAdjustment",
+          "amount": -500,
+          "method": "salaryAdjustment",
+          "note": "Adjusted against November salary",
+          "reference": "November 2026 salary",
+          "createdAt": "2026-11-19T09:00:00Z",
+          "salaryDue": 10000,
+          "salaryPayable": 9500
+        }
+      },
+      "PartnerCashList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartnerCashSummary"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "partnerId": "USR-000003",
+              "name": "Delivery Partner",
+              "isActive": true,
+              "totalCollected": 4000,
+              "cashCollected": 3500,
+              "upiCollected": 500,
+              "bankCollected": 0,
+              "cashHandedOver": 1000,
+              "salaryAdjusted": 500,
+              "cashHeld": 2000,
+              "overHanded": 0
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      },
+      "PartnerCashLedger": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/PartnerCashSummary"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartnerCashHistory"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "summary",
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "summary": {
+            "partnerId": "USR-000003",
+            "name": "Delivery Partner",
+            "isActive": true,
+            "totalCollected": 4000,
+            "cashCollected": 3500,
+            "upiCollected": 500,
+            "bankCollected": 0,
+            "cashHandedOver": 1000,
+            "salaryAdjusted": 500,
+            "cashHeld": 2000,
+            "overHanded": 0
+          },
+          "items": [
+            {
+              "entryId": "PAY-000003",
+              "kind": "salaryAdjustment",
+              "amount": -500,
+              "method": "salaryAdjustment",
+              "note": "Adjusted against November salary",
+              "reference": "November 2026 salary",
+              "createdAt": "2026-11-19T09:00:00Z",
+              "salaryDue": 10000,
+              "salaryPayable": 9500
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      },
+      "PartnerCashResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/PartnerCashEntry"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PartnerCashSummary"
+          }
+        },
+        "required": [
+          "entry",
+          "summary"
+        ],
+        "example": {
+          "entry": {
+            "entryId": "PAY-000003",
+            "partnerId": "USR-000003",
+            "amount": 500,
+            "method": "salaryAdjustment",
+            "note": "Adjusted against November salary",
+            "reference": "November 2026 salary",
+            "requestId": "cash-settlement-example-0001",
+            "salaryDue": 10000,
+            "salaryPayable": 9500,
+            "allocations": [
+              {
+                "tripId": "TRP-000001",
+                "amount": 500
+              }
+            ],
+            "recordedBy": "USR-000001",
+            "createdAt": "2026-11-19T09:00:00Z"
+          },
+          "summary": {
+            "partnerId": "USR-000003",
+            "name": "Delivery Partner",
+            "isActive": true,
+            "totalCollected": 4000,
+            "cashCollected": 3500,
+            "upiCollected": 500,
+            "bankCollected": 0,
+            "cashHandedOver": 1000,
+            "salaryAdjusted": 500,
+            "cashHeld": 2000,
+            "overHanded": 0
+          }
+        }
+      },
+      "TripCashSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cashCollected": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "priorCashHandedOver": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "salaryAdjusted": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "tripCashHandedOver": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "remainingCash": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          }
+        },
+        "required": [
+          "cashCollected",
+          "priorCashHandedOver",
+          "salaryAdjusted",
+          "tripCashHandedOver",
+          "remainingCash"
+        ],
+        "example": {
+          "cashCollected": 3500,
+          "priorCashHandedOver": 1000,
+          "salaryAdjusted": 500,
+          "tripCashHandedOver": 0,
+          "remainingCash": 2000
+        }
+      },
       "ReasonInput": {
         "type": "object",
         "additionalProperties": false,
@@ -13852,6 +15973,142 @@
             "CUS-000001": "Sunrise Stores",
             "VEH-000001": "Delivery Van 1"
           }
+        }
+      },
+      "BulkAssignOrdersInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "orderIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "tripId": {
+            "type": "string",
+            "description": "Optional explicit trip instead of automatic trip selection."
+          },
+          "deliveryPartnerId": {
+            "type": "string"
+          },
+          "vehicleId": {
+            "type": "string",
+            "description": "Optional specific vehicle. Otherwise reuse the partner's current trip, or create a trip using their default vehicle."
+          }
+        },
+        "required": [
+          "orderIds"
+        ],
+        "example": {
+          "orderIds": [
+            "ORD-000001",
+            "ORD-000002"
+          ],
+          "tripId": "TRP-000001"
+        },
+        "anyOf": [
+          {
+            "required": [
+              "tripId"
+            ]
+          },
+          {
+            "required": [
+              "deliveryPartnerId"
+            ]
+          }
+        ]
+      },
+      "BulkCancelOrdersInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "orderIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "orderIds",
+          "reason"
+        ],
+        "example": {
+          "orderIds": [
+            "ORD-000001",
+            "ORD-000002"
+          ],
+          "reason": "Customer cancelled before assignment"
+        }
+      },
+      "BulkOrdersResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            },
+            "maxItems": 200
+          },
+          "tripId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "orders"
+        ],
+        "example": {
+          "orders": [
+            {
+              "isActive": true,
+              "createdAt": "2026-11-19T09:00:00Z",
+              "updatedAt": "2026-11-19T09:00:00Z",
+              "orderId": "ORD-000001",
+              "customerId": "CUS-000001",
+              "source": "phone",
+              "items": [
+                {
+                  "variantId": "MVN-000001",
+                  "quantity": 20
+                },
+                {
+                  "variantId": "MVN-000002",
+                  "quantity": 5
+                }
+              ],
+              "picked": [],
+              "reservedItems": [
+                {
+                  "variantId": "MVN-000001",
+                  "quantity": 20
+                },
+                {
+                  "variantId": "MVN-000002",
+                  "quantity": 5
+                }
+              ],
+              "awaitingStockItems": [],
+              "status": "assigned",
+              "createdBy": "USR-000001",
+              "tripId": "TRP-000001"
+            }
+          ],
+          "tripId": "TRP-000001"
         }
       },
       "Health": {
@@ -14286,6 +16543,17 @@
                 }
               ],
               "picked": [],
+              "reservedItems": [
+                {
+                  "variantId": "MVN-000001",
+                  "quantity": 20
+                },
+                {
+                  "variantId": "MVN-000002",
+                  "quantity": 5
+                }
+              ],
+              "awaitingStockItems": [],
               "status": "open",
               "createdBy": "USR-000001"
             }
@@ -14332,6 +16600,7 @@
               "isActive": true,
               "createdAt": "2026-11-19T09:00:00Z",
               "updatedAt": "2026-11-19T09:00:00Z",
+              "name": "Morning run",
               "tripDate": "2026-11-19",
               "durationDays": 1,
               "startsAt": "2026-11-18T18:30:00Z",
@@ -14394,7 +16663,9 @@
               "stockKey": "LOC-000001:MVN-000001",
               "locationId": "LOC-000001",
               "variantId": "MVN-000001",
-              "quantity": 100
+              "quantity": 225,
+              "reservedQuantity": 13,
+              "availableQuantity": 212
             }
           ],
           "page": 1,
@@ -14655,7 +16926,9 @@
               "hasDifference": true,
               "note": "50 short",
               "settledBy": "USR-000001",
-              "createdAt": "2026-11-19T09:00:00Z"
+              "createdAt": "2026-11-19T09:00:00Z",
+              "priorCashHandedOver": 0,
+              "salaryAdjusted": 0
             }
           ],
           "page": 1,
@@ -14704,6 +16977,62 @@
           "page": 1,
           "limit": 20,
           "total": 1
+        }
+      },
+      "AvailabilityList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Availability"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AvailabilityTotals"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total",
+          "totals"
+        ],
+        "example": {
+          "items": [
+            {
+              "variantId": "MVN-000001",
+              "onHandQuantity": 225,
+              "reservedQuantity": 13,
+              "availableQuantity": 212,
+              "awaitingStockQuantity": 0
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1,
+          "totals": {
+            "onHandQuantity": 225,
+            "reservedQuantity": 13,
+            "availableQuantity": 212,
+            "awaitingStockQuantity": 0
+          }
         }
       },
       "MovementArray": {
