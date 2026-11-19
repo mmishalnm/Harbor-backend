@@ -38,8 +38,14 @@ func TestMongoDisplayNamesPreserveAccountAndAssignmentAccess(t *testing.T) {
 	}
 	for _, c := range []testClient{sc, rider} {
 		names := resolve(c, ids...)
-		if names[f.customer.CustomerID] != "Sunrise Stores" || names[f.driver.UserID] != "labelsdriver" || names[hiddenCustomer.CustomerID] != "" || names[hiddenStaff.UserID] != "" {
+		if names[f.customer.CustomerID] != "Sunrise Stores" || names[f.driver.UserID] != "labelsdriver" || names[hiddenStaff.UserID] != "" {
 			t.Fatal("assignment leak or missing visible name", names)
+		}
+		if c.token == sc.token && names[hiddenCustomer.CustomerID] != "" {
+			t.Fatal("staff saw an unassigned customer", names)
+		}
+		if c.token == rider.token && names[hiddenCustomer.CustomerID] != "Unassigned store" {
+			t.Fatal("rider cannot resolve a selectable customer", names)
 		}
 		if strings.Contains(strings.Join(mapValues(names), " "), "Varun") {
 			t.Fatal("cross-business label leak")

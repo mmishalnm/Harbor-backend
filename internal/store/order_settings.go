@@ -141,10 +141,22 @@ func (s *Store) autoAssignOrder(sc mongo.SessionContext, a Actor, order *Order) 
 	if !account.OrderSettings.AutoAssignDeliveryPartnerOrders {
 		return nil
 	}
+	return s.assignOrderToPartner(sc, a.UserID, "", order)
+}
+
+func (s *Store) assignOrderToPartner(sc mongo.SessionContext, partnerID, vehicleID string, order *Order) error {
+	// Serialize both automatic and office assignments with this partner's orders.
+	var partner User
+	if err := s.lock(sc, "users", "userId", partnerID, &partner); err != nil {
+		return err
+	}
+	if partner.Role != DeliveryPartner {
+		return apperr.Validation("deliveryPartnerId must identify a deliveryPartner")
+	}
 	now := s.now().UTC()
 	var chosen Trip
 	full := false
-	cur, err := s.col("trips").Find(sc, bson.M{"deliveryPartnerId": a.UserID, "isActive": true, "status": bson.M{"$in": []string{"planned", "started"}}})
+	cur, err := s.col("trips").Find(sc, bson.M{"deliveryPartnerId": partnerID, "isActive": true, "status": bson.M{"$in": []string{"planned", "started"}}})
 	if err != nil {
 		return err
 	}
@@ -155,7 +167,7 @@ func (s *Store) autoAssignOrder(sc mongo.SessionContext, a Actor, order *Order) 
 			return err
 		}
 		normalizeTrip(&candidate)
-		if !eligibleOrderTrip(candidate, a.UserID, now) {
+		if !eligibleOrderTrip(candidate, partnerID, now) || (vehicleID != "" && candidate.VehicleID != vehicleID) {
 			continue
 		}
 		if len(candidate.Stops) >= 200 {
@@ -175,10 +187,13 @@ func (s *Store) autoAssignOrder(sc mongo.SessionContext, a Actor, order *Order) 
 		if full {
 			return apperr.Conflict("TRIP_FULL", "The delivery partner's current trip has reached its 200-order limit")
 		}
-		if a.AssignedVehicleID == "" {
-			return apperr.Conflict("DELIVERY_VEHICLE_NOT_ASSIGNED", "Admin must assign a vehicle before an automatic trip can be created")
+		if vehicleID == "" {
+			vehicleID = partner.AssignedVehicleID
 		}
-		chosen, err = s.createTrip(sc, TripInput{VehicleID: a.AssignedVehicleID, DeliveryPartnerID: a.UserID, OrderIDs: []string{}}, now)
+		if vehicleID == "" {
+			return apperr.Conflict("DELIVERY_VEHICLE_NOT_ASSIGNED", "Choose a vehicle or assign a default vehicle to the delivery partner before creating a trip")
+		}
+		chosen, err = s.createTrip(sc, TripInput{VehicleID: vehicleID, DeliveryPartnerID: partnerID, OrderIDs: []string{}}, now)
 		if err != nil {
 			return err
 		}

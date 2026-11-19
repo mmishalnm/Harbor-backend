@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Harbor by Code Wayne",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see assigned locations and trips; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
   },
   "servers": [
@@ -548,7 +548,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Read-only batch lookup of up to 200 explicit business IDs, not a directory/list endpoint. Returns names only; never stock, prices, customer contact details, balances or credentials. Missing/inaccessible references are omitted. Every query uses the signed business account. Staff/rider customer and team labels are restricted to their visible orders/trips and own identity; location/vehicle/order/trip restrictions match existing access. Riders resolve invoice numbers only on their own trips; warehouse staff cannot resolve invoices. Archived accessible names remain available for history. IDs remain the values submitted by clients.",
+        "description": "Read-only batch lookup of up to 200 explicit business IDs, not a directory/list endpoint. Returns names only; never stock, prices, customer contact details, balances or credentials. Missing/inaccessible references are omitted. Every query uses the signed business account. Riders may resolve customer names across their own business for order selection. Staff customer labels and all team labels are restricted to visible orders/trips and own identity; location/vehicle/order/trip restrictions match existing access. Riders resolve invoice numbers only on their own trips; warehouse staff cannot resolve invoices. Archived accessible names remain available for history. IDs remain the values submitted by clients.",
         "security": [
           {
             "bearerAuth": []
@@ -4944,7 +4944,7 @@
                 "example": {
                   "error": {
                     "code": "DELIVERY_VEHICLE_NOT_ASSIGNED",
-                    "message": "Admin must assign a vehicle before an automatic trip can be created"
+                    "message": "Choose a vehicle or assign a default vehicle to the delivery partner before creating a trip"
                   }
                 }
               }
@@ -6898,6 +6898,378 @@
                     "message": "An internal error occurred"
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/options": {
+      "get": {
+        "summary": "Choose an active customer by name for a new order",
+        "operationId": "GET_api_v1_customers_options",
+        "tags": [
+          "customers"
+        ],
+        "x-roles": [
+          "admin",
+          "manager",
+          "deliveryPartner"
+        ],
+        "description": "Paginated active customer names and business IDs in the signed business account, sorted by name then customer ID. Delivery partners can choose a customer before any order or trip exists. No contacts, balances or global ledgers are returned. Customer creation remains admin/manager only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerOptionList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "customerId": "CUS-000001",
+                      "name": "Sunrise Stores"
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}/assign": {
+      "post": {
+        "summary": "Assign an open order to a delivery partner",
+        "operationId": "POST_api_v1_orders_id_assign",
+        "tags": [
+          "orders"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Admin/manager only. Atomically attaches an open, unpicked order to the selected active delivery partner's current-window trip. Started trips are preferred, then earliest planned trip; optional vehicleId restricts matching to that van. If none exists, creates today's planned trip using the selected or default vehicle and the business trip duration. Works even when automatic rider-order assignment is disabled. All references are scoped to the signed business. Assignment never moves stock. Already assigned/closed orders cannot be reassigned. Missing vehicle, busy/nonempty van or full trip rolls back the whole operation. The partner then sees the assigned order in their own trip.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                },
+                "example": {
+                  "isActive": true,
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z",
+                  "orderId": "ORD-000001",
+                  "customerId": "CUS-000001",
+                  "source": "phone",
+                  "items": [
+                    {
+                      "variantId": "MVN-000001",
+                      "quantity": 20
+                    },
+                    {
+                      "variantId": "MVN-000002",
+                      "quantity": 5
+                    }
+                  ],
+                  "picked": [],
+                  "status": "assigned",
+                  "createdBy": "USR-000001",
+                  "tripId": "TRP-000001"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "alreadyAssigned": {
+                    "value": {
+                      "error": {
+                        "code": "ORDER_ALREADY_ASSIGNED",
+                        "message": "Only an open, unpicked order can be assigned"
+                      }
+                    }
+                  },
+                  "vehicleRequired": {
+                    "value": {
+                      "error": {
+                        "code": "DELIVERY_VEHICLE_NOT_ASSIGNED",
+                        "message": "Choose a vehicle or assign a default vehicle to the delivery partner before creating a trip"
+                      }
+                    }
+                  },
+                  "vehicleBusy": {
+                    "value": {
+                      "error": {
+                        "code": "VEHICLE_BUSY",
+                        "message": "Vehicle is already assigned to an unfinished trip"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignOrderInput"
+              },
+              "example": {
+                "deliveryPartnerId": "USR-000003",
+                "vehicleId": "VEH-000001"
               }
             }
           }
@@ -11399,6 +11771,28 @@
           "address": "Kahakootam"
         }
       },
+      "CustomerOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "customerId",
+          "name"
+        ],
+        "example": {
+          "customerId": "CUS-000001",
+          "name": "Sunrise Stores"
+        }
+      },
       "BusinessAddress": {
         "type": "object",
         "additionalProperties": false,
@@ -12329,6 +12723,26 @@
           "picked": [],
           "status": "open",
           "createdBy": "USR-000001"
+        }
+      },
+      "AssignOrderInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "deliveryPartnerId": {
+            "type": "string"
+          },
+          "vehicleId": {
+            "type": "string",
+            "description": "Optional specific vehicle. Otherwise reuse the partner's current trip, or create a trip using their default vehicle."
+          }
+        },
+        "required": [
+          "deliveryPartnerId"
+        ],
+        "example": {
+          "deliveryPartnerId": "USR-000003",
+          "vehicleId": "VEH-000001"
         }
       },
       "Stop": {
@@ -14242,6 +14656,49 @@
               "note": "50 short",
               "settledBy": "USR-000001",
               "createdAt": "2026-11-19T09:00:00Z"
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      },
+      "CustomerOptionList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOption"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "customerId": "CUS-000001",
+              "name": "Sunrise Stores"
             }
           ],
           "page": 1,

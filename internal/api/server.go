@@ -218,6 +218,16 @@ func (s *Server) register() {
 	s.add("POST", "/api/v1/stock/adjust", admins, 201, body(func(a store.Actor, r *http.Request, in store.AdjustmentInput) (any, error) {
 		return s.Store.Adjust(r.Context(), a, in)
 	}))
+	s.add("GET", "/api/v1/customers/options", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
+		p, err := pagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return s.Store.CustomerOptions(r.Context(), a, p)
+	})
+	s.add("POST", "/api/v1/orders/{id}/assign", admins, 200, body(func(a store.Actor, r *http.Request, in store.AssignOrderInput) (any, error) {
+		return s.Store.AssignOrder(r.Context(), a, r.PathValue("id"), in)
+	}))
 	s.add("POST", "/api/v1/orders", everyone, 201, body(func(a store.Actor, r *http.Request, in store.OrderInput) (any, error) {
 		return s.Store.CreateOrder(r.Context(), a, in)
 	}))

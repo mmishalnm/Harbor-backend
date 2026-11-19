@@ -55,8 +55,8 @@ func (s *Store) ResolveDisplayNames(ctx context.Context, a Actor, in DisplayName
 		groups[col] = append(groups[col], id)
 	}
 	office := a.Role == Admin || a.Role == Manager
-	// Restricted roles may see customer/team labels only through visible orders
-	// and trips, plus their own identity. No customer contacts or balances are read.
+	// Riders may choose customers throughout their business. Staff customer labels
+	// and all team labels remain assignment-scoped. No contacts or balances are read.
 	allowedCustomers, allowedUsers := []any{}, []any{a.UserID}
 	if !office && (len(groups["customers"])+len(groups["users"]) > 0) {
 		filter := bson.M{}
@@ -137,7 +137,7 @@ func (s *Store) ResolveDisplayNames(ctx context.Context, a Actor, in DisplayName
 		if err := s.restrictAssignedLists(ctx, a, col, access); err != nil {
 			return out, err
 		}
-		if !office && col == "customers" {
+		if a.Role == WarehouseStaff && col == "customers" {
 			access["customerId"] = bson.M{"$in": allowedCustomers}
 		}
 		if !office && col == "users" {
