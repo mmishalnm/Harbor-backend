@@ -3,6 +3,7 @@ module harbor
 go 1.22
 
 require (
+	github.com/signintech/gopdf v0.33.0
 	go.mongodb.org/mongo-driver v1.17.9
 	golang.org/x/crypto v0.32.0
 )
@@ -11,6 +12,8 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
+	github.com/phpdave11/gofpdi v1.0.14-0.20211212211723-1f10f9844311 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect

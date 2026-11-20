@@ -14,8 +14,9 @@ import (
 )
 
 type CashAllocation struct {
-	TripID string  `json:"tripId" bson:"tripId"`
-	Amount float64 `json:"amount" bson:"amount"`
+	PaymentID string  `json:"paymentId,omitempty" bson:"paymentId,omitempty"`
+	TripID    string  `json:"tripId,omitempty" bson:"tripId,omitempty"`
+	Amount    float64 `json:"amount" bson:"amount"`
 }
 type PartnerCashEntry struct {
 	EntryID       string           `json:"entryId" bson:"entryId"`
@@ -53,6 +54,7 @@ type PartnerCashSummary struct {
 	OverHanded     float64 `json:"overHanded"`
 }
 type PartnerCashHistory struct {
+	CustomerID    string    `json:"customerId,omitempty"`
 	RecordedBy    string    `json:"recordedBy"`
 	EntryID       string    `json:"entryId"`
 	TripID        string    `json:"tripId,omitempty"`
@@ -73,7 +75,42 @@ type PartnerCashResult struct {
 	Entry   PartnerCashEntry   `json:"entry"`
 	Summary PartnerCashSummary `json:"summary"`
 }
+type cashSource struct {
+	TripID    string
+	PaymentID string
+	CreatedAt time.Time
+}
+
+func cashSourceKey(tripID, paymentID string) string {
+	if tripID != "" {
+		return tripID
+	}
+	return paymentID
+}
+func allocateCashSources(amount int64, sources []cashSource, balances map[string]int64) ([]CashAllocation, int64) {
+	sources = append([]cashSource(nil), sources...)
+	sort.Slice(sources, func(i, j int) bool {
+		if !sources[i].CreatedAt.Equal(sources[j].CreatedAt) {
+			return sources[i].CreatedAt.Before(sources[j].CreatedAt)
+		}
+		return cashSourceKey(sources[i].TripID, sources[i].PaymentID) < cashSourceKey(sources[j].TripID, sources[j].PaymentID)
+	})
+	allocations := []CashAllocation{}
+	for _, source := range sources {
+		q := min(amount, max(balances[cashSourceKey(source.TripID, source.PaymentID)], 0))
+		if q > 0 {
+			allocations = append(allocations, CashAllocation{TripID: source.TripID, PaymentID: source.PaymentID, Amount: money(q)})
+			amount -= q
+		}
+		if amount == 0 {
+			break
+		}
+	}
+	return allocations, amount
+}
+
 type partnerCashState struct {
+	Sources   []cashSource
 	Summary   PartnerCashSummary
 	History   []PartnerCashHistory
 	Trips     []Trip
@@ -141,23 +178,38 @@ func (s *Store) partnerCashState(ctx context.Context, partnerID string) (partner
 	for _, trip := range out.Trips {
 		ids = append(ids, trip.TripID)
 	}
-	payments, err := readAll[Payment](ctx, s.col("payments"), bson.M{"tripId": bson.M{"$in": ids}}, bson.D{})
+	payments, err := readAll[Payment](ctx, s.col("payments"), bson.M{"$or": bson.A{
+		bson.M{"tripId": bson.M{"$in": ids}},
+		bson.M{"receivedBy": partnerID, "$or": bson.A{bson.M{"tripId": ""}, bson.M{"tripId": nil}}},
+	}}, bson.D{})
 	if err != nil {
 		return out, err
 	}
 	cash, upi, bank, handed, salary := int64(0), int64(0), int64(0), int64(0), int64(0)
+	sourceByKey := map[string]cashSource{}
 	for _, payment := range payments {
 		q := cents(payment.Amount)
 		switch payment.Method {
 		case "cash":
 			cash += q
-			out.Remaining[payment.TripID] += q
+			key := cashSourceKey(payment.TripID, payment.PaymentID)
+			out.Remaining[key] += q
+			source := cashSource{TripID: payment.TripID, CreatedAt: payment.CreatedAt}
+			if payment.TripID == "" {
+				source.PaymentID = payment.PaymentID
+			}
+			if existing, ok := sourceByKey[key]; !ok || source.CreatedAt.Before(existing.CreatedAt) {
+				sourceByKey[key] = source
+			}
 		case "upi":
 			upi += q
 		case "bank":
 			bank += q
 		}
-		out.History = append(out.History, PartnerCashHistory{EntryID: payment.PaymentID, TripID: payment.TripID, Kind: "collection", RecordedBy: payment.ReceivedBy, Amount: payment.Amount, Method: payment.Method, CreatedAt: payment.CreatedAt})
+		out.History = append(out.History, PartnerCashHistory{EntryID: payment.PaymentID, TripID: payment.TripID, Kind: "collection", CustomerID: payment.CustomerID, RecordedBy: payment.ReceivedBy, Amount: payment.Amount, Method: payment.Method, CreatedAt: payment.CreatedAt})
+	}
+	for _, source := range sourceByKey {
+		out.Sources = append(out.Sources, source)
 	}
 	settlements, err := readAll[Settlement](ctx, s.col("settlements"), bson.M{"tripId": bson.M{"$in": ids}}, bson.D{})
 	if err != nil {
@@ -179,7 +231,7 @@ func (s *Store) partnerCashState(ctx context.Context, partnerID string) (partner
 			salary += cents(entry.Amount)
 		}
 		for _, allocation := range entry.Allocations {
-			out.Remaining[allocation.TripID] -= cents(allocation.Amount)
+			out.Remaining[cashSourceKey(allocation.TripID, allocation.PaymentID)] -= cents(allocation.Amount)
 		}
 		out.History = append(out.History, PartnerCashHistory{EntryID: entry.EntryID, Kind: entry.Method, RecordedBy: entry.RecordedBy, Amount: -entry.Amount, Method: entry.Method, Note: entry.Note, Reference: entry.Reference, CreatedAt: entry.CreatedAt, SalaryDue: entry.SalaryDue, SalaryPayable: entry.SalaryPayable})
 	}
@@ -226,8 +278,16 @@ func (s *Store) PartnerCashList(ctx context.Context, a Actor, p Page) (List[Part
 	})
 	return out, err
 }
-func (s *Store) PartnerCash(ctx context.Context, a Actor, partnerID string, p Page) (PartnerCashLedger, error) {
+func (s *Store) PartnerCash(ctx context.Context, a Actor, partnerID string, p Page, filterMaps ...map[string]string) (PartnerCashLedger, error) {
 	var out PartnerCashLedger
+	filterMap := map[string]string{}
+	if len(filterMaps) > 0 {
+		filterMap = filterMaps[0]
+	}
+	filters, err := parseHistoryFilters(filterMap, true)
+	if err != nil {
+		return out, err
+	}
 	if err := allow(a, Admin, Manager, DeliveryPartner); err != nil {
 		return out, err
 	}
@@ -238,11 +298,12 @@ func (s *Store) PartnerCash(ctx context.Context, a Actor, partnerID string, p Pa
 		return out, err
 	}
 	ctx = database.WithAccount(ctx, a.AccountID)
-	err := s.db.WithTx(ctx, func(sc mongo.SessionContext) error {
+	err = s.db.WithTx(ctx, func(sc mongo.SessionContext) error {
 		state, err := s.partnerCashState(sc, partnerID)
 		if err != nil {
 			return err
 		}
+		state.History = filteredCashHistory(state.History, filters)
 		out = PartnerCashLedger{Summary: state.Summary, List: List[PartnerCashHistory]{Items: []PartnerCashHistory{}, Page: p.Page, Limit: p.Limit, Total: int64(len(state.History))}}
 		start := (p.Page - 1) * p.Limit
 		end := min(start+p.Limit, len(state.History))
@@ -298,19 +359,10 @@ func (s *Store) SettlePartnerCash(ctx context.Context, a Actor, partnerID string
 			entry.SalaryDue = &due
 			entry.SalaryPayable = &net
 		}
-		remaining := cents(entry.Amount)
-		for _, trip := range state.Trips {
-			q := min(remaining, max(state.Remaining[trip.TripID], 0))
-			if q > 0 {
-				entry.Allocations = append(entry.Allocations, CashAllocation{trip.TripID, money(q)})
-				remaining -= q
-			}
-			if remaining == 0 {
-				break
-			}
-		}
+		var remaining int64
+		entry.Allocations, remaining = allocateCashSources(cents(entry.Amount), state.Sources, state.Remaining)
 		if remaining != 0 {
-			return apperr.Conflict("CASH_HOLDING_EXCEEDED", "No outstanding trip cash remains for this settlement")
+			return apperr.Conflict("CASH_HOLDING_EXCEEDED", "No outstanding collected cash remains for this settlement")
 		}
 		if err := insert(sc, s.col("partnerCashEntries"), entry); err != nil {
 			return err

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -59,7 +60,7 @@ func (s *Store) Receive(ctx context.Context, a Actor, in ReceiveInput) (Movement
 	if err := validText(in.Reason); err != nil {
 		return out, err
 	}
-	err := s.tx(ctx, a, []string{Admin, Manager, WarehouseStaff}, func(sc mongo.SessionContext, a Actor) error {
+	err := s.tx(ctx, a, []string{Admin, Manager, WarehouseStaff, DeliveryPartner}, func(sc mongo.SessionContext, a Actor) error {
 		if _, err := s.storage(sc, in.LocationID); err != nil {
 			return err
 		}
@@ -90,7 +91,7 @@ func (s *Store) Transfer(ctx context.Context, a Actor, in TransferInput) (Moveme
 	if err := validText(in.Reason); err != nil {
 		return out, err
 	}
-	err := s.tx(ctx, a, []string{Admin, Manager, WarehouseStaff}, func(sc mongo.SessionContext, a Actor) error {
+	err := s.tx(ctx, a, []string{Admin, Manager, WarehouseStaff, DeliveryPartner}, func(sc mongo.SessionContext, a Actor) error {
 		if _, err := s.storage(sc, in.FromLocationID); err != nil {
 			return err
 		}
@@ -99,6 +100,11 @@ func (s *Store) Transfer(ctx context.Context, a Actor, in TransferInput) (Moveme
 		}
 		if err := checkPickup(a, in.FromLocationID); err != nil {
 			return err
+		}
+		if a.Role == DeliveryPartner {
+			if err := checkPickup(a, in.ToLocationID); err != nil {
+				return err
+			}
 		}
 		var v Variant
 		if err := s.lock(sc, "variants", "variantId", in.VariantID, &v); err != nil {
@@ -118,19 +124,26 @@ type AdjustmentInput struct {
 	Reason        string `json:"reason"`
 }
 
+func validateAdjustment(in AdjustmentInput) error {
+	if in.QuantityDelta == 0 || in.QuantityDelta > 1000000 || in.QuantityDelta < -1000000 {
+		return apperr.Validation("quantityDelta must be nonzero and between -1,000,000 and 1,000,000")
+	}
+	if strings.TrimSpace(in.Reason) == "" {
+		return apperr.Validation("An adjustment reason is required")
+	}
+	return validText(in.Reason)
+}
 func (s *Store) Adjust(ctx context.Context, a Actor, in AdjustmentInput) (Movement, error) {
 	var out Movement
-	if in.QuantityDelta == 0 || in.QuantityDelta > 1000000 || in.QuantityDelta < -1000000 {
-		return out, apperr.Validation("quantityDelta must be nonzero and between -1,000,000 and 1,000,000")
-	}
-	if in.Reason == "" {
-		return out, apperr.Validation("An adjustment reason is required")
-	}
-	if err := validText(in.Reason); err != nil {
+	in.Reason = strings.TrimSpace(in.Reason)
+	if err := validateAdjustment(in); err != nil {
 		return out, err
 	}
-	err := s.tx(ctx, a, []string{Admin, Manager}, func(sc mongo.SessionContext, a Actor) error {
+	err := s.tx(ctx, a, []string{Admin, Manager, DeliveryPartner}, func(sc mongo.SessionContext, a Actor) error {
 		if _, err := s.storage(sc, in.LocationID); err != nil {
+			return err
+		}
+		if err := checkPickup(a, in.LocationID); err != nil {
 			return err
 		}
 		var v Variant

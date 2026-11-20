@@ -31,7 +31,7 @@ type Server struct {
 type endpoint func(store.Actor, *http.Request) (any, error)
 
 var admins = []string{store.Admin, store.Manager}
-var storage = []string{store.Admin, store.Manager, store.WarehouseStaff}
+var storage = []string{store.Admin, store.Manager, store.WarehouseStaff, store.DeliveryPartner}
 var drivers = []string{store.Admin, store.Manager, store.DeliveryPartner}
 var everyone = []string{store.Admin, store.Manager, store.WarehouseStaff, store.DeliveryPartner}
 
@@ -125,6 +125,13 @@ func body[T any](fn func(store.Actor, *http.Request, T) (any, error)) endpoint {
 		return fn(a, r, in)
 	}
 }
+func historyQuery(r *http.Request) map[string]string {
+	out := map[string]string{}
+	for _, key := range []string{"type", "method", "dateFrom", "dateTo"} {
+		out[key] = r.URL.Query().Get(key)
+	}
+	return out
+}
 func pagination(r *http.Request) (store.Page, error) {
 	p := store.Page{Page: 1, Limit: 20}
 	for k, ptr := range map[string]*int{"page": &p.Page, "limit": &p.Limit} {
@@ -215,7 +222,7 @@ func (s *Server) register() {
 	s.add("POST", "/api/v1/stock/transfer", storage, 201, body(func(a store.Actor, r *http.Request, in store.TransferInput) (any, error) {
 		return s.Store.Transfer(r.Context(), a, in)
 	}))
-	s.add("POST", "/api/v1/stock/adjust", admins, 201, body(func(a store.Actor, r *http.Request, in store.AdjustmentInput) (any, error) {
+	s.add("POST", "/api/v1/stock/adjust", drivers, 201, body(func(a store.Actor, r *http.Request, in store.AdjustmentInput) (any, error) {
 		return s.Store.Adjust(r.Context(), a, in)
 	}))
 	s.add("GET", "/api/v1/customers/options", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
@@ -243,7 +250,7 @@ func (s *Server) register() {
 		if err != nil {
 			return nil, err
 		}
-		return s.Store.PartnerCash(r.Context(), a, r.PathValue("id"), p)
+		return s.Store.PartnerCash(r.Context(), a, r.PathValue("id"), p, historyQuery(r))
 	})
 	s.add("POST", "/api/v1/partners/{id}/cash-settlements", admins, 201, body(func(a store.Actor, r *http.Request, in store.PartnerCashInput) (any, error) {
 		return s.Store.SettlePartnerCash(r.Context(), a, r.PathValue("id"), in)
@@ -305,19 +312,25 @@ func (s *Server) register() {
 	s.add("POST", "/api/v1/payments", drivers, 201, body(func(a store.Actor, r *http.Request, in store.PaymentInput) (any, error) {
 		return s.Store.CollectPayment(r.Context(), a, in)
 	}))
+	s.add("GET", "/api/v1/customers/{id}/ledger/export", admins, 200, func(a store.Actor, r *http.Request) (any, error) {
+		return s.Store.ExportCustomerLedger(r.Context(), a, r.PathValue("id"), "", historyQuery(r))
+	})
+	s.add("GET", "/api/v1/trips/{id}/customers/{customerId}/ledger/export", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
+		return s.Store.ExportCustomerLedger(r.Context(), a, r.PathValue("customerId"), r.PathValue("id"), historyQuery(r))
+	})
 	s.add("GET", "/api/v1/customers/{id}/ledger", admins, 200, func(a store.Actor, r *http.Request) (any, error) {
 		p, err := pagination(r)
 		if err != nil {
 			return nil, err
 		}
-		return s.Store.CustomerLedger(r.Context(), a, r.PathValue("id"), "", p)
+		return s.Store.CustomerLedger(r.Context(), a, r.PathValue("id"), "", p, historyQuery(r))
 	})
 	s.add("GET", "/api/v1/trips/{id}/customers/{customerId}/ledger", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
 		p, err := pagination(r)
 		if err != nil {
 			return nil, err
 		}
-		return s.Store.CustomerLedger(r.Context(), a, r.PathValue("customerId"), r.PathValue("id"), p)
+		return s.Store.CustomerLedger(r.Context(), a, r.PathValue("customerId"), r.PathValue("id"), p, historyQuery(r))
 	})
 	s.add("GET", "/api/v1/invoices/{id}", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
 		return s.Store.GetInvoice(r.Context(), a, r.PathValue("id"))
@@ -343,7 +356,7 @@ func (s *Server) register() {
 				return nil, err
 			}
 			f := map[string]string{}
-			for _, key := range []string{"warehouseId", "productId", "locationId", "variantId", "customerId", "tripId", "isActive"} {
+			for _, key := range []string{"warehouseId", "productId", "locationId", "variantId", "customerId", "tripId", "isActive", "status", "source", "deliveryPartnerId", "dateFrom", "dateTo", "method", "kind", "role", "vehicleId", "receivedBy", "hasDifference"} {
 				f[key] = r.URL.Query().Get(key)
 			}
 			return s.Store.ListResources(r.Context(), a, resource, p, f)

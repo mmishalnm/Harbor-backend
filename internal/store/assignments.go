@@ -50,12 +50,28 @@ func (s *Store) AssignTripStaff(ctx context.Context, a Actor, tripID string, ids
 	return out, err
 }
 
+func constrainLocationFilter(filter bson.M, allowed []string) {
+	constrainIDFilter(filter, "locationId", allowed)
+}
+func constrainIDFilter(filter bson.M, key string, allowed []string) {
+	if id, ok := filter[key].(string); ok {
+		for _, candidate := range allowed {
+			if candidate == id {
+				return
+			}
+		}
+		filter[key] = bson.M{"$in": []string{}}
+		return
+	}
+	filter[key] = bson.M{"$in": allowed}
+}
+
 func (s *Store) restrictAssignedLists(ctx context.Context, a Actor, resource string, filter bson.M) error {
-	if a.Role == WarehouseStaff {
+	if a.Role == WarehouseStaff || a.Role == DeliveryPartner {
 		switch resource {
 		case "locations":
 			if len(a.LocationIDs) > 0 {
-				filter["locationId"] = bson.M{"$in": a.LocationIDs}
+				constrainLocationFilter(filter, a.LocationIDs)
 			}
 		case "stocks":
 			locationIDs := a.LocationIDs
@@ -93,10 +109,22 @@ func (s *Store) restrictAssignedLists(ctx context.Context, a Actor, resource str
 			if err != nil {
 				return err
 			}
-			filter["warehouseId"] = bson.M{"$in": ids}
+			allowed := []string{}
+			for _, id := range ids {
+				if value, ok := id.(string); ok {
+					allowed = append(allowed, value)
+				}
+			}
+			constrainIDFilter(filter, "warehouseId", allowed)
 		case "trips":
+			if a.Role != WarehouseStaff {
+				break
+			}
 			filter["warehouseStaffIds"] = a.UserID
 		case "orders":
+			if a.Role != WarehouseStaff {
+				break
+			}
 			ids, err := s.col("trips").Distinct(ctx, "tripId", bson.M{"warehouseStaffIds": a.UserID})
 			if err != nil {
 				return err
@@ -123,7 +151,13 @@ func (s *Store) restrictAssignedLists(ctx context.Context, a Actor, resource str
 		if a.Role == DeliveryPartner && a.AssignedVehicleID != "" {
 			ids = append(ids, a.AssignedVehicleID)
 		}
-		filter["vehicleId"] = bson.M{"$in": ids}
+		allowed := []string{}
+		for _, id := range ids {
+			if value, ok := id.(string); ok {
+				allowed = append(allowed, value)
+			}
+		}
+		constrainIDFilter(filter, "vehicleId", allowed)
 	}
 	return nil
 }

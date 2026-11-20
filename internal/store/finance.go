@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"sort"
 	"strings"
 	"time"
 
@@ -159,9 +158,6 @@ type PaymentInput struct {
 func (s *Store) CollectPayment(ctx context.Context, a Actor, in PaymentInput) (Payment, error) {
 	var out Payment
 	err := s.tx(ctx, a, []string{Admin, Manager, DeliveryPartner}, func(sc mongo.SessionContext, a Actor) error {
-		if a.Role == DeliveryPartner && in.TripID == "" {
-			return apperr.Validation("Delivery partners must collect against their own started trip")
-		}
 		if in.TripID != "" {
 			var t Trip
 			if err := s.lock(sc, "trips", "tripId", in.TripID, &t); err != nil {
@@ -196,6 +192,7 @@ func (s *Store) CollectPayment(ctx context.Context, a Actor, in PaymentInput) (P
 }
 
 type LedgerEntry struct {
+	Method      string    `json:"method,omitempty"`
 	EntryID     string    `json:"entryId"`
 	Type        string    `json:"type"`
 	InvoiceNo   string    `json:"invoiceNo,omitempty"`
@@ -205,6 +202,8 @@ type LedgerEntry struct {
 	CreatedAt   time.Time `json:"createdAt"`
 }
 type Ledger struct {
+	BusinessName  string        `json:"-"`
+	GeneratedAt   time.Time     `json:"-"`
 	Customer      Customer      `json:"customer"`
 	InvoiceTotal  float64       `json:"invoiceTotal"`
 	PaymentTotal  float64       `json:"paymentTotal"`
@@ -217,17 +216,36 @@ type Ledger struct {
 	Total         int           `json:"total"`
 }
 
-func (s *Store) CustomerLedger(ctx context.Context, a Actor, customerID, tripID string, p Page) (Ledger, error) {
+func (s *Store) CustomerLedger(ctx context.Context, a Actor, customerID, tripID string, p Page, filterMaps ...map[string]string) (Ledger, error) {
+	return s.customerLedger(ctx, a, customerID, tripID, p, false, filterMaps...)
+}
+
+func (s *Store) customerLedger(ctx context.Context, a Actor, customerID, tripID string, p Page, all bool, filterMaps ...map[string]string) (Ledger, error) {
 	ctx = database.WithAccount(ctx, a.AccountID)
 	var out Ledger
+	filterMap := map[string]string{}
+	if len(filterMaps) > 0 {
+		filterMap = filterMaps[0]
+	}
+	filters, err := parseHistoryFilters(filterMap, false)
+	if err != nil {
+		return out, err
+	}
 	if err := ValidatePage(p); err != nil {
 		return out, err
 	}
 	if err := allow(a, Admin, Manager, DeliveryPartner); err != nil {
 		return out, err
 	}
-	err := s.db.WithTx(ctx, func(sc mongo.SessionContext) error {
-		out = Ledger{Entries: []LedgerEntry{}, Page: p.Page, Limit: p.Limit}
+	err = s.db.WithTx(ctx, func(sc mongo.SessionContext) error {
+		out = Ledger{Entries: []LedgerEntry{}, Page: p.Page, Limit: p.Limit, GeneratedAt: s.now()}
+		if all {
+			var account BusinessAccount
+			if err := s.find(sc, "accounts", "accountId", a.AccountID, &account); err != nil {
+				return err
+			}
+			out.BusinessName = account.BusinessName
+		}
 		if a.Role == DeliveryPartner {
 			if tripID == "" {
 				return apperr.Forbidden()
@@ -269,27 +287,29 @@ func (s *Store) CustomerLedger(ctx context.Context, a Actor, customerID, tripID 
 			paid := state.Paid[i.InvoiceID]
 			invoices += amount
 			due += amount - paid
-			entries = append(entries, LedgerEntry{i.InvoiceID, kind, i.InvoiceNo, money(amount), money(paid), money(amount - paid), i.CreatedAt})
+			entries = append(entries, LedgerEntry{EntryID: i.InvoiceID, Type: kind, InvoiceNo: i.InvoiceNo, Amount: money(amount), Allocated: money(paid), Outstanding: money(amount - paid), CreatedAt: i.CreatedAt})
 		}
 		for _, v := range state.Payments {
 			amount := cents(v.Amount)
 			used := state.Used[v.PaymentID]
 			payments += amount
 			credit += amount - used
-			entries = append(entries, LedgerEntry{v.PaymentID, "payment", "", money(-amount), money(used), 0, v.CreatedAt})
+			entries = append(entries, LedgerEntry{EntryID: v.PaymentID, Type: "payment", Amount: money(-amount), Allocated: money(used), CreatedAt: v.CreatedAt, Method: v.Method})
 		}
-		sort.Slice(entries, func(i, j int) bool {
-			if entries[i].CreatedAt.Equal(entries[j].CreatedAt) {
-				return entries[i].EntryID < entries[j].EntryID
-			}
-			return entries[i].CreatedAt.Before(entries[j].CreatedAt)
-		})
+		entries = filteredLedgerEntries(entries, filters)
 		out.InvoiceTotal = money(invoices)
 		out.PaymentTotal = money(payments)
 		out.Outstanding = money(due)
 		out.AdvanceCredit = money(credit)
 		out.Balance = money(invoices - payments)
 		out.Total = len(entries)
+		if all {
+			if len(entries) > 10000 {
+				return apperr.Validation("Too many transactions to export; choose a narrower date range")
+			}
+			out.Entries = entries
+			return nil
+		}
 		start := (p.Page - 1) * p.Limit
 		if start < len(entries) {
 			end := start + p.Limit

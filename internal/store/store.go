@@ -134,7 +134,7 @@ func checkPickup(a Actor, locationID string) error {
 			return nil
 		}
 	}
-	return apperr.Conflict("LOCATION_NOT_ASSIGNED", "Pickup is limited to your assigned locations")
+	return apperr.Conflict("LOCATION_NOT_ASSIGNED", "Stock access is limited to your assigned locations")
 }
 func (s *Store) tripAccess(a Actor, t Trip) error {
 	if a.Role == WarehouseStaff {
@@ -178,13 +178,16 @@ func (s *Store) ListResources(ctx context.Context, a Actor, resource string, p P
 	ctx = database.WithAccount(ctx, a.AccountID)
 	f := bson.M{}
 	sort := bson.D{{Key: "createdAt", Value: -1}}
+	if id := map[string]string{"trips": "tripId", "stockMovements": "movementId", "invoices": "invoiceId", "payments": "paymentId", "paymentAllocations": "allocationKey", "settlements": "tripId"}[resource]; id != "" {
+		sort = append(sort, bson.E{Key: id, Value: -1})
+	}
 	if err := ValidatePage(p); err != nil {
 		return nil, err
 	}
 	if err := allow(a, Admin, Manager, WarehouseStaff, DeliveryPartner); err != nil {
 		return nil, err
 	}
-	for _, k := range []string{"warehouseId", "productId", "locationId", "variantId", "customerId", "tripId"} {
+	for _, k := range []string{"warehouseId", "productId", "locationId", "variantId", "customerId", "tripId", "vehicleId"} {
 		if v := filters[k]; v != "" {
 			f[k] = v
 		}
@@ -194,6 +197,14 @@ func (s *Store) ListResources(ctx context.Context, a Actor, resource string, p P
 			return nil, apperr.Validation("isActive must be true or false")
 		}
 		f["isActive"] = v == "true"
+	}
+	if resource == "orders" {
+		if err := s.applyOrderFilters(ctx, filters, f); err != nil {
+			return nil, err
+		}
+	}
+	if err := s.applyListFilters(ctx, a, resource, filters, f); err != nil {
+		return nil, err
 	}
 	if err := s.restrictAssignedLists(ctx, a, resource, f); err != nil {
 		return nil, err
@@ -212,7 +223,11 @@ func (s *Store) ListResources(ctx context.Context, a Actor, resource string, p P
 		return list[Vehicle](ctx, s, resource, f, p, bson.D{{Key: "vehicleId", Value: 1}})
 	case "trips":
 		if a.Role == DeliveryPartner {
-			f["deliveryPartnerId"] = a.UserID
+			if requested, ok := f["deliveryPartnerId"].(string); ok && requested != a.UserID {
+				f["deliveryPartnerId"] = bson.M{"$in": []string{}}
+			} else {
+				f["deliveryPartnerId"] = a.UserID
+			}
 		}
 		rows, err := list[Trip](ctx, s, resource, f, p, sort)
 		for i := range rows.Items {
@@ -220,11 +235,8 @@ func (s *Store) ListResources(ctx context.Context, a Actor, resource string, p P
 		}
 		return rows, err
 	case "orders":
-		return s.reservedOrders(ctx, f, p, sort)
+		return s.reservedOrders(ctx, f, p, bson.D{{Key: "createdAt", Value: -1}, {Key: "orderId", Value: -1}})
 	case "stocks":
-		if a.Role == DeliveryPartner {
-			return nil, apperr.Forbidden()
-		}
 		return s.reservedStocks(ctx, f, p)
 	case "stockMovements":
 		if err := adminOnly(); err != nil {
