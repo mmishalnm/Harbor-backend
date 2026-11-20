@@ -58,7 +58,7 @@ func Connect(ctx context.Context, c config.Config) (*DB, error) {
 	return db, nil
 }
 
-var BusinessIDs = map[string]string{"coupons": "couponId", "products": "productId", "variants": "variantId", "warehouses": "warehouseId", "locations": "locationId", "vehicles": "vehicleId", "customers": "customerId", "orders": "orderId", "trips": "tripId", "invoices": "invoiceId", "payments": "paymentId", "stockMovements": "movementId", "users": "userId", "counters": "counterName", "stocks": "stockKey", "paymentAllocations": "allocationKey", "settlements": "tripId", "partnerCashEntries": "entryId"}
+var BusinessIDs = map[string]string{"subscriptionEvents": "eventId", "coupons": "couponId", "products": "productId", "variants": "variantId", "warehouses": "warehouseId", "locations": "locationId", "vehicles": "vehicleId", "customers": "customerId", "orders": "orderId", "trips": "tripId", "invoices": "invoiceId", "payments": "paymentId", "stockMovements": "movementId", "users": "userId", "counters": "counterName", "stocks": "stockKey", "paymentAllocations": "allocationKey", "settlements": "tripId", "partnerCashEntries": "entryId"}
 
 func LegacyFilter() bson.M {
 	return bson.M{"$or": bson.A{bson.M{"accountId": bson.M{"$exists": false}}, bson.M{"accountId": ""}, bson.M{"accountId": nil}}}
@@ -121,6 +121,11 @@ func (d *DB) EnsureIndexes(ctx context.Context) error {
 	}
 	if err := unique("platformCounters", bson.D{{Key: "counterName", Value: 1}}, "counterName_1", nil); err != nil {
 		return err
+	}
+	for col, field := range map[string]string{"platformPlans": "planId", "platformEvents": "eventId"} {
+		if err := unique(col, bson.D{{Key: field, Value: 1}}, field+"_1", nil); err != nil {
+			return err
+		}
 	}
 	for col, field := range BusinessIDs {
 		if err := unique(col, bson.D{{Key: "accountId", Value: 1}, {Key: field, Value: 1}}, "account_"+field, nil); err != nil {

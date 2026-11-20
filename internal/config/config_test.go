@@ -113,3 +113,21 @@ func TestDotEnv(t *testing.T) {
 		t.Fatal("accepted unclosed quote")
 	}
 }
+
+func TestPlatformBootstrapConfig(t *testing.T) {
+	for _, pair := range [][2]string{{"owner", ""}, {"", "Long-password-123"}, {"owner", "short"}, {"admin", "Long-password-123"}, {"bad name", "Long-password-123"}} {
+		env := testEnv()
+		env["SUPERADMIN_USERNAME"] = pair[0]
+		env["SUPERADMIN_PASSWORD"] = pair[1]
+		if _, err := Load([]string{"-env-file", filepath.Join(t.TempDir(), "absent")}, func(k string) string { return env[k] }); err == nil {
+			t.Fatal("invalid platform bootstrap accepted", pair[0])
+		}
+	}
+	env := testEnv()
+	env["SUPERADMIN_USERNAME"] = "harbor.owner"
+	env["SUPERADMIN_PASSWORD"] = "Long-password-123"
+	c, err := Load([]string{"-env-file", filepath.Join(t.TempDir(), "absent")}, func(k string) string { return env[k] })
+	if err != nil || c.SuperAdminUsername != "harbor.owner" {
+		t.Fatal(err)
+	}
+}

@@ -39,6 +39,9 @@ func Run(args []string, getenv func(string) string) error {
 	if err := s.Bootstrap(startup, c.AdminUsername, c.AdminPassword); err != nil {
 		return err
 	}
+	if err := s.BootstrapSuperAdmin(startup, c.SuperAdminUsername, c.SuperAdminPassword); err != nil {
+		return err
+	}
 	server := &http.Server{Addr: net.JoinHostPort("", c.Port), Handler: api.New(s, slog.Default()), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 35 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	errCh := make(chan error, 1)
 	go func() { errCh <- server.ListenAndServe() }()

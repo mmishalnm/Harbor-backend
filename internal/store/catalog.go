@@ -46,6 +46,9 @@ func (s *Store) CreateProduct(ctx context.Context, a Actor, in ProductInput) (Pr
 		return out, err
 	}
 	err := s.tx(ctx, a, []string{Admin, Manager}, func(sc mongo.SessionContext, _ Actor) error {
+		if err := s.checkCapacity(sc, "product", ""); err != nil {
+			return err
+		}
 		id, err := s.next(sc, "product", "MPN-")
 		if err != nil {
 			return err
@@ -69,6 +72,9 @@ func (s *Store) CreateVariant(ctx context.Context, a Actor, in VariantInput) (Va
 	err := s.tx(ctx, a, []string{Admin, Manager}, func(sc mongo.SessionContext, _ Actor) error {
 		var p Product
 		if err := s.lock(sc, "products", "productId", in.ProductID, &p); err != nil {
+			return err
+		}
+		if err := s.checkCapacity(sc, "variant", in.ProductID); err != nil {
 			return err
 		}
 		id, err := s.next(sc, "variant", "MVN-")
@@ -100,6 +106,9 @@ func (s *Store) CreateWarehouse(ctx context.Context, a Actor, in WarehouseInput)
 		return out, err
 	}
 	err := s.tx(ctx, a, []string{Admin, Manager}, func(sc mongo.SessionContext, _ Actor) error {
+		if err := s.checkCapacity(sc, "warehouse", ""); err != nil {
+			return err
+		}
 		id, err := s.next(sc, "warehouse", "WHS-")
 		if err != nil {
 			return err

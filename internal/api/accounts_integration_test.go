@@ -21,7 +21,15 @@ func signupBusiness(t *testing.T, c testClient, username, name string) (testClie
 	if r.User.Role != store.Admin || r.User.AccountID == "" || r.User.AccountID != r.Account.AccountID || r.Account.BusinessName != name {
 		t.Fatal("invalid business signup", r.Account)
 	}
-	return testClient{server: c.server, token: r.AccessToken, db: c.db}, r
+	client := testClient{server: c.server, token: r.AccessToken, db: c.db}
+	plans := must[store.List[store.Plan]](t, client, "GET", "/api/v1/subscription/plans", nil, 200)
+	for _, p := range plans.Items {
+		if p.Name == "Integration plan" {
+			must[store.SubscriptionAccess](t, client, "POST", "/api/v1/subscription", map[string]string{"planId": p.PlanID}, 200)
+			break
+		}
+	}
+	return client, r
 }
 
 func TestMongoConcurrentSignupIsAtomic(t *testing.T) {
@@ -104,6 +112,9 @@ func TestMongoLegacyBusinessMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 	legacy := loginAs(t, c, "legacyadmin")
+	wantError(t, legacy, "GET", "/api/v1/products", nil, 402, "SUBSCRIPTION_REQUIRED")
+	plans := must[store.List[store.Plan]](t, legacy, "GET", "/api/v1/subscription/plans", nil, 200)
+	must[store.SubscriptionAccess](t, legacy, "POST", "/api/v1/subscription", map[string]string{"planId": plans.Items[0].PlanID}, 200)
 	rows := must[store.List[store.Product]](t, legacy, "GET", "/api/v1/products", nil, 200)
 	if rows.Total != 1 || rows.Items[0].ProductID != "MPN-000009" {
 		t.Fatal("legacy products lost")

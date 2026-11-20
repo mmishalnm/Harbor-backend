@@ -26,11 +26,12 @@ type Claims struct {
 	Issuer    string `json:"iss"`
 }
 type LoginResult struct {
-	AccessToken string          `json:"accessToken"`
-	TokenType   string          `json:"tokenType"`
-	ExpiresIn   int             `json:"expiresIn"`
-	User        User            `json:"user"`
-	Account     BusinessAccount `json:"account"`
+	Access      *SubscriptionAccess `json:"access,omitempty"`
+	AccessToken string              `json:"accessToken"`
+	TokenType   string              `json:"tokenType"`
+	ExpiresIn   int                 `json:"expiresIn"`
+	User        User                `json:"user"`
+	Account     *BusinessAccount    `json:"account"`
 }
 
 var invalidAuth = apperr.New(401, "UNAUTHORIZED", "Invalid credentials or expired token")
@@ -80,10 +81,12 @@ func (s *Store) verify(token string) (Claims, error) {
 	if err != nil || json.Unmarshal(body, &c) != nil {
 		return c, invalidAuth
 	}
-	if !database.ValidAccountID(c.AccountID) || c.Subject == "" || c.Issuer != "harbor" || c.Expires <= s.now().Unix() || c.Issued > s.now().Unix()+30 || c.Expires <= c.Issued {
+	if c.Subject == "" || c.Issuer != "harbor" || c.Expires <= s.now().Unix() || c.Issued > s.now().Unix()+30 || c.Expires <= c.Issued {
 		return c, invalidAuth
 	}
-	if allow(Actor{Role: c.Role}, Admin, Manager, WarehouseStaff, DeliveryPartner) != nil {
+	platform := c.Role == SuperAdmin && c.AccountID == platformAccount
+	business := database.ValidAccountID(c.AccountID) && allow(Actor{Role: c.Role}, Admin, Manager, WarehouseStaff, DeliveryPartner) == nil
+	if !platform && !business {
 		return c, invalidAuth
 	}
 	return c, nil
@@ -92,6 +95,11 @@ func (s *Store) Authenticate(ctx context.Context, token string) (Actor, error) {
 	c, err := s.verify(token)
 	if err != nil {
 		return Actor{}, err
+	}
+	if c.Role == SuperAdmin {
+		a := Actor{Role: SuperAdmin, UserID: c.Subject, AccountID: platformAccount}
+		_, err := s.platformUser(ctx, a)
+		return a, err
 	}
 	ctx = database.WithAccount(ctx, c.AccountID)
 	var u User
@@ -106,11 +114,14 @@ func (s *Store) Authenticate(ctx context.Context, token string) (Actor, error) {
 		return Actor{}, invalidAuth
 	}
 	var account BusinessAccount
-	if err := s.col("accounts").FindOne(ctx, bson.M{"accountId": c.AccountID, "isActive": true}).Decode(&account); err != nil {
+	if err := s.col("accounts").FindOne(ctx, bson.M{"accountId": c.AccountID}).Decode(&account); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return Actor{}, invalidAuth
 		}
 		return Actor{}, err
+	}
+	if !account.IsActive {
+		return Actor{}, subscriptionError(subscriptionAccess(account, s.now()))
 	}
 	return Actor{AssignedVehicleID: u.AssignedVehicleID, UserID: u.UserID, Role: u.Role, LocationIDs: u.LocationIDs, AccountID: u.AccountID}, nil
 }
@@ -128,16 +139,28 @@ func (s *Store) Login(ctx context.Context, username, password string) (LoginResu
 	if hash == "" {
 		hash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
 	}
-	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) != nil || u.UserID == "" || !database.ValidAccountID(u.AccountID) {
+	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) != nil || u.UserID == "" {
+		return out, invalidAuth
+	}
+	if u.Role == SuperAdmin && u.AccountID == platformAccount {
+		return s.loginResult(u, BusinessAccount{})
+	}
+	if !database.ValidAccountID(u.AccountID) {
+		return out, invalidAuth
+	}
+	if allow(Actor{Role: u.Role}, Admin, Manager, WarehouseStaff, DeliveryPartner) != nil {
 		return out, invalidAuth
 	}
 	var account BusinessAccount
-	err = s.col("accounts").FindOne(database.WithAccount(ctx, u.AccountID), bson.M{"isActive": true}).Decode(&account)
+	err = s.col("accounts").FindOne(database.WithAccount(ctx, u.AccountID), bson.M{}).Decode(&account)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return out, invalidAuth
 	}
 	if err != nil {
 		return out, err
+	}
+	if !account.IsActive {
+		return out, subscriptionError(subscriptionAccess(account, s.now()))
 	}
 	return s.loginResult(u, account)
 }
@@ -203,6 +226,11 @@ func (s *Store) CreateUser(ctx context.Context, a Actor, in CreateUserInput) (Us
 		return out, err
 	}
 	err = s.tx(ctx, a, []string{Admin}, func(sc mongo.SessionContext, _ Actor) error {
+		if in.Role == DeliveryPartner {
+			if err := s.checkCapacity(sc, "partner", ""); err != nil {
+				return err
+			}
+		}
 		if err := s.identityAvailable(sc, in.Username, in.Email); err != nil {
 			if apperr.Public(err).Code == "LOGIN_EXISTS" {
 				return apperr.Conflict("USERNAME_EXISTS", "Username or email already exists")

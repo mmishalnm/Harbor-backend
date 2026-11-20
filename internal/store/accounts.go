@@ -31,6 +31,9 @@ type BusinessProfileInput struct {
 	Address       BusinessAddress `json:"address" bson:"address"`
 }
 type BusinessAccount struct {
+	Subscription         *Subscription `json:"subscription,omitempty" bson:"subscription,omitempty"`
+	TrialUsed            bool          `json:"trialUsed" bson:"trialUsed"`
+	StatusReason         string        `json:"-" bson:"statusReason,omitempty"`
 	OrderSettings        OrderSettings `json:"orderSettings" bson:"orderSettings"`
 	Base                 `bson:",inline"`
 	AccountID            string `json:"accountId" bson:"accountId"`
@@ -46,8 +49,9 @@ type SignupInput struct {
 	BusinessProfileInput
 }
 type SessionProfile struct {
-	User    User            `json:"user"`
-	Account BusinessAccount `json:"account"`
+	Access  *SubscriptionAccess `json:"access,omitempty"`
+	User    User                `json:"user"`
+	Account *BusinessAccount    `json:"account"`
 }
 
 func validEmail(value string) bool {
@@ -121,8 +125,8 @@ func scopedSession(sc mongo.SessionContext, accountID string) mongo.SessionConte
 	return mongo.NewSessionContext(database.WithAccount(sc, accountID), mongo.SessionFromContext(sc))
 }
 
-// rawIdentity is intentionally confined to login, registration, bootstrap and
-// offline migration. Business operations must use the scoped collection API.
+// rawIdentity is confined to identity/bootstrap, explicit platform management
+// and global plan lookup. Tenant operational data always uses scoped collections.
 func (s *Store) rawIdentity(name string) *mongo.Collection { return s.db.Mongo.Collection(name) }
 func (s *Store) identityAvailable(sc mongo.SessionContext, username, email string) error {
 	query := bson.M{"username": username}
@@ -160,7 +164,7 @@ func (s *Store) registerAccount(sc mongo.SessionContext, in SignupInput, hash st
 		return out, err
 	}
 	out.User = User{Base: s.base(), AccountID: aid, UserID: uid, Name: in.Name, Username: in.Username, Email: in.Email, Phone: in.Phone, PasswordHash: hash, Role: Admin, LocationIDs: []string{}}
-	out.Account = BusinessAccount{OrderSettings: effectiveOrderSettings(OrderSettings{}), Base: s.base(), AccountID: aid, OwnerUserID: uid, BusinessProfileInput: in.BusinessProfileInput}
+	out.Account = &BusinessAccount{OrderSettings: effectiveOrderSettings(OrderSettings{}), Base: s.base(), AccountID: aid, OwnerUserID: uid, BusinessProfileInput: in.BusinessProfileInput}
 	if err := insert(sc, s.col("accounts"), out.Account); err != nil {
 		return out, err
 	}
@@ -185,16 +189,28 @@ func (s *Store) Signup(ctx context.Context, in SignupInput) (LoginResult, error)
 	if err != nil {
 		return result, err
 	}
-	return s.loginResult(profile.User, profile.Account)
+	return s.loginResult(profile.User, *profile.Account)
 }
 func (s *Store) loginResult(u User, account BusinessAccount) (LoginResult, error) {
 	account.OrderSettings = effectiveOrderSettings(account.OrderSettings)
 	token, err := s.token(u)
-	return LoginResult{AccessToken: token, TokenType: "Bearer", ExpiresIn: 28800, User: u, Account: account}, err
+	out := LoginResult{AccessToken: token, TokenType: "Bearer", ExpiresIn: 28800, User: u, Account: &account}
+	if u.Role == SuperAdmin {
+		out.Account = nil
+	}
+	if u.Role != SuperAdmin {
+		access := subscriptionAccess(account, s.now())
+		out.Access = &access
+	}
+	return out, err
 }
 func (s *Store) MyProfile(ctx context.Context, a Actor) (SessionProfile, error) {
+	if a.Role == SuperAdmin {
+		u, err := s.platformUser(ctx, a)
+		return SessionProfile{User: u}, err
+	}
 	ctx = database.WithAccount(ctx, a.AccountID)
-	var out SessionProfile
+	out := SessionProfile{Account: &BusinessAccount{}}
 	err := s.db.WithTx(ctx, func(sc mongo.SessionContext) error {
 		if err := s.find(sc, "users", "userId", a.UserID, &out.User); err != nil {
 			return err
@@ -202,8 +218,12 @@ func (s *Store) MyProfile(ctx context.Context, a Actor) (SessionProfile, error) 
 		if !out.User.IsActive || out.User.Role != a.Role {
 			return invalidAuth
 		}
-		return s.find(sc, "accounts", "accountId", a.AccountID, &out.Account)
+		return s.find(sc, "accounts", "accountId", a.AccountID, out.Account)
 	})
+	if err == nil {
+		access := subscriptionAccess(*out.Account, s.now())
+		out.Access = &access
+	}
 	return out, err
 }
 func (s *Store) UpdateBusiness(ctx context.Context, a Actor, in BusinessProfileInput) (BusinessAccount, error) {

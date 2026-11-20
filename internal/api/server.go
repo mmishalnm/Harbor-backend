@@ -82,6 +82,12 @@ func (s *Server) add(method, path string, roles []string, status int, fn endpoin
 				s.fail(w, r, apperr.Forbidden())
 				return
 			}
+			if actor.Role != store.SuperAdmin && !subscriptionExempt(path) {
+				if err := s.Store.RequireSubscription(r.Context(), actor); err != nil {
+					s.fail(w, r, err)
+					return
+				}
+			}
 		}
 		value, err := fn(actor, r)
 		if err != nil {
@@ -146,6 +152,7 @@ func pagination(r *http.Request) (store.Page, error) {
 	return p, store.ValidatePage(p)
 }
 func (s *Server) register() {
+	s.registerSubscriptions()
 	s.add("POST", "/api/v1/coupons", admins, 201, body(func(a store.Actor, r *http.Request, in store.CouponInput) (any, error) {
 		return s.Store.SaveCoupon(r.Context(), a, "", in)
 	}))
@@ -189,7 +196,7 @@ func (s *Server) register() {
 	s.add("POST", "/api/v1/display-names", everyone, 200, body(func(a store.Actor, r *http.Request, in store.DisplayNamesInput) (any, error) {
 		return s.Store.ResolveDisplayNames(r.Context(), a, in)
 	}))
-	s.add("GET", "/api/v1/auth/me", everyone, 200, func(a store.Actor, r *http.Request) (any, error) { return s.Store.MyProfile(r.Context(), a) })
+	s.add("GET", "/api/v1/auth/me", append(append([]string{}, everyone...), store.SuperAdmin), 200, func(a store.Actor, r *http.Request) (any, error) { return s.Store.MyProfile(r.Context(), a) })
 	s.add("GET", "/api/v1/account", everyone, 200, func(a store.Actor, r *http.Request) (any, error) {
 		profile, err := s.Store.MyProfile(r.Context(), a)
 		return profile.Account, err

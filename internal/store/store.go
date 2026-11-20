@@ -27,13 +27,19 @@ func (s *Store) base() Base {
 }
 func (s *Store) col(name string) *database.Collection { return s.db.Scoped(name) }
 func (s *Store) tx(ctx context.Context, a Actor, roles []string, fn func(mongo.SessionContext, Actor) error) error {
+	if err := allow(a, roles...); err != nil {
+		return err
+	}
 	ctx = database.WithAccount(ctx, a.AccountID)
 	return s.db.WithTx(ctx, func(sc mongo.SessionContext) error {
 		var account BusinessAccount
-		if err := s.col("accounts").FindOne(sc, bson.M{"isActive": true}).Decode(&account); err != nil {
+		if err := s.col("accounts").FindOneAndUpdate(sc, bson.M{"accountId": a.AccountID, "isActive": true}, bson.M{"$inc": bson.M{"revision": 1}}).Decode(&account); err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
 				return invalidAuth
 			}
+			return err
+		}
+		if err := subscriptionError(subscriptionAccess(account, s.now())); err != nil {
 			return err
 		}
 		var u User

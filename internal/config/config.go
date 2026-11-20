@@ -12,13 +12,15 @@ import (
 )
 
 type Config struct {
-	MongoURI      string
-	MongoDatabase string
-	Port          string
-	Env           string
-	JWTSecret     string
-	AdminPassword string
-	AdminUsername string
+	SuperAdminUsername string
+	SuperAdminPassword string
+	MongoURI           string
+	MongoDatabase      string
+	Port               string
+	Env                string
+	JWTSecret          string
+	AdminPassword      string
+	AdminUsername      string
 }
 
 // Load uses flags > process environment > .env > non-secret defaults.
@@ -66,6 +68,8 @@ func Load(args []string, getenv func(string) string) (Config, error) {
 	c.JWTSecret = value("JWT_SECRET", "")
 	c.AdminPassword = value("ADMIN_PASSWORD", "")
 	c.AdminUsername = value("ADMIN_USERNAME", "admin")
+	c.SuperAdminUsername = value("SUPERADMIN_USERNAME", "")
+	c.SuperAdminPassword = value("SUPERADMIN_PASSWORD", "")
 	if err := fs.Parse(args); err != nil {
 		return c, err
 	}
@@ -93,6 +97,14 @@ func Load(args []string, getenv func(string) string) (Config, error) {
 	}
 	if strings.TrimSpace(c.AdminUsername) == "" {
 		return c, fmt.Errorf("ADMIN_USERNAME is required")
+	}
+	if c.SuperAdminUsername != "" || c.SuperAdminPassword != "" {
+		if strings.TrimSpace(c.SuperAdminUsername) == "" || len(c.SuperAdminUsername) > 100 || strings.ContainsAny(c.SuperAdminUsername, " \t\r\n") || len(c.SuperAdminPassword) < 12 || len(c.SuperAdminPassword) > 72 {
+			return c, fmt.Errorf("SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD (12 to 72 bytes) must be configured together")
+		}
+		if strings.EqualFold(c.SuperAdminUsername, c.AdminUsername) {
+			return c, fmt.Errorf("SUPERADMIN_USERNAME must differ from the tenant ADMIN_USERNAME")
+		}
 	}
 	return c, nil
 }

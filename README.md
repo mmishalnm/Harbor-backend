@@ -1,5 +1,36 @@
 # Harbor-backend
 
+## Harbor platform owner and tenant subscriptions (backend 1.12.0 / app 1.9.0)
+
+Harbor's platform owner signs in with the separate **superAdmin** role. All businesses and their admins/managers/staff/riders remain isolated tenants. Public signup always creates a tenant admin and cannot grant platform access. Tenant user creation cannot grant admin or superadmin.
+
+Configure `SUPERADMIN_USERNAME` and `SUPERADMIN_PASSWORD` together in the private environment, using a distinct username and a 12–72 byte password, then restart. This bootstraps the Harbor owner; it never promotes a tenant or resets an existing password. The pair is optional so existing deployments can start before platform setup. `ADMIN_USERNAME` / `ADMIN_PASSWORD` still bootstrap a tenant business, whose owner must now select a plan. Do not reuse either login for the other role.
+
+In Flutter, superadmin login opens **Harbor platform → Businesses / Plans**, with no tenant navigation. Platform endpoints list only signup registration fields, owner name/username/email/phone, access state and subscription metadata. They do not return customer, stock, sales, payment, invoice or staff-directory data and provide no impersonation. Every existing tenant operation explicitly rejects superadmin. Deactivate/reactivate requires a reason and records an append-only platform event. Deactivation blocks all tenant users and existing bearer tokens immediately on subsequent requests; it retains records and preserves subscription dates.
+
+- `GET /api/v1/platform/businesses`: paginated, optional `isActive` filter.
+- `PUT /api/v1/platform/businesses/{accountId}/status`: `{"isActive":false,"reason":"Account review"}`; true restores access.
+- `GET/POST /api/v1/platform/plans`, `PUT /api/v1/platform/plans/{planId}`, `POST /api/v1/platform/plans/{planId}/archive`: platform-owner plan management. Lists are paginated (limit ≤200).
+
+Create an initial plan before tenants use the application:
+
+```json
+{"name":"Starter","description":"For small distributors","skuLimit":100,"warehouseLimit":2,"partnerLimit":5,"trialDays":14,"billingInterval":"monthly"}
+```
+
+Plans support monthly/yearly recurring periods and 0–365 trial days. **All plans are currently INR 0.** No payment method is requested, no money is charged, and a payment gateway is not connected. A nonzero-price subscription is refused with `PAYMENT_SETUP_REQUIRED` until verified recurring payments are implemented. Plan IDs use the global atomic `PLN-` series; accepted subscriptions use tenant `SUB-` IDs. Trial/plan changes and status changes run in `WithTx` and append audit records.
+
+New, existing and migrated businesses without a subscription receive `402 SUBSCRIPTION_REQUIRED` for operational APIs. Login, own profile and subscription management remain available. Tenant admin chooses a plan at `POST /api/v1/subscription` with `{"planId":"PLN-000001"}`. `GET /api/v1/subscription/plans` lists active plans; `GET /api/v1/subscription` shows status, accepted terms and next renewal. Admin/manager sees usage; staff sees status only and cannot subscribe/cancel/resume. The Flutter app forces plan selection before opening operations and sends blocked staff to their business admin.
+
+SKU usage is active variants plus active products that do not yet have an active variant. Creating a product reserves one SKU; its first variant uses that same slot, each further active variant uses another. Active variants count even if their parent product is archived. Warehouse and delivery-partner limits count active records; other staff do not consume partner capacity. Product/variant/warehouse/rider creation is checked under the account revision lock so concurrent requests cannot oversubscribe. `409 PLAN_LIMIT_REACHED` asks the owner to upgrade. A smaller plan below current usage is rejected with `PLAN_BELOW_USAGE`; no operational data is deleted or hidden to fit a plan.
+
+The first selected subscription grants the trial once per business. Switching plans keeps only any remaining trial and never grants another. A plan's limits, description, trial and renewal interval are snapshotted; later edits/archiving apply to new subscriptions only. Existing subscribers retain their accepted terms. Free subscriptions renew deterministically from their persisted anchor; no scheduler is needed. Indian calendar billing dates keep the original day (31 January → last day of February → 31 March; leap-year dates recover). Free-period access remains active after trial and across missed app openings.
+
+`POST /api/v1/subscription/cancel` stops renewal at trial/current-period end; `.../resume` resumes before expiry. Cancellation does not delete data or end access immediately. At expiry, operational APIs return `402 SUBSCRIPTION_EXPIRED`, and the owner must select a plan again without a fresh trial. Deactivation does not pause or extend trials. Paid recurring collection, checkout, webhook verification and failed-payment retries remain a future payment-provider integration, not simulated transactions.
+
+Deploy backend **1.12.0** on Render before app **1.9.0+12**. Set the platform bootstrap credentials, create a free plan, then have tenant owners subscribe. Normal Go hosting remains `go build -o harbor .` followed by `./harbor -env-file .env`. Swagger `/docs` documents role scopes, plan schemas, pagination, trial/active/required responses, platform sessions and access/limit errors.
+
+
 ## Coupons and order discounts (backend 1.11.0, app 1.8.0)
 
 In Flutter, open **More → Coupons & discounts** to create, edit or archive a percentage or fixed INR coupon. Every order form, including create-during-pickup, offers **No discount**, **Apply a coupon**, and (admin/manager only) **Enter a discount**. Manual discounts require a reason. One discount per order; coupons cannot be combined with manual discounts. Staff/riders may select active coupons approved by their own business.

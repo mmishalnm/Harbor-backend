@@ -80,6 +80,33 @@ schema("LoginInput", {"username": string, "password": {"type": "string", "format
 admin = {**examples["User"], "userId": "USR-000001", "name": "Administrator", "username": "admin", "role": "admin"}
 schema("LoginResult", {"accessToken": string, "tokenType": string, "expiresIn": {"type": "integer"}, "user": ref("User"), "account": ref("BusinessAccount")}, {"accessToken": "<signed-HS256-JWT>", "tokenType": "Bearer", "expiresIn": 28800, "user": admin, "account": examples["BusinessAccount"]})
 schema("SessionProfile", {"user": ref("User"), "account": ref("BusinessAccount")}, {"user": admin, "account": examples["BusinessAccount"]})
+
+plan_props = {"name": name, "description": text, "skuLimit": {"type":"integer","minimum":1,"maximum":1000000}, "warehouseLimit":{"type":"integer","minimum":1,"maximum":100000}, "partnerLimit":{"type":"integer","minimum":0,"maximum":100000}, "trialDays":{"type":"integer","minimum":0,"maximum":365}, "billingInterval":{"type":"string","enum":["monthly","yearly"]}}
+plan_input = {"name":"Starter","description":"For growing distributors","skuLimit":100,"warehouseLimit":2,"partnerLimit":5,"trialDays":14,"billingInterval":"monthly"}
+schema("PlanInput",plan_props,plan_input,["name","skuLimit","warehouseLimit","partnerLimit","trialDays","billingInterval"])
+schema("Plan",{"planId":string,**plan_props,"price":{"type":"number","enum":[0]},"currency":{"type":"string","enum":["INR"]}},{"planId":"PLN-000001",**plan_input,"price":0,"currency":"INR"},entity=True)
+plan = examples["Plan"]
+schema("PlanUsage",{"skus":{"type":"integer","minimum":0},"warehouses":{"type":"integer","minimum":0},"partners":{"type":"integer","minimum":0}},{"skus":2,"warehouses":1,"partners":1})
+access_example = {"status":"trialing","hasAccess":True,"subscriptionId":"SUB-000001","plan":plan,"trialEndsAt":"2026-12-04T09:00:00Z","periodStart":"2026-11-20T09:00:00Z","periodEnd":"2026-12-04T09:00:00Z","nextRenewalAt":"2026-12-04T09:00:00Z","autoRenew":True}
+schema("SubscriptionAccess",{"status":{"type":"string","enum":["required","trialing","active","expired","businessInactive","paymentRequired"]},"hasAccess":{"type":"boolean"},"subscriptionId":string,"plan":ref("Plan"),"trialEndsAt":timestamp,"periodStart":timestamp,"periodEnd":timestamp,"nextRenewalAt":timestamp,"autoRenew":{"type":"boolean"},"usage":ref("PlanUsage")},{**access_example,"usage":examples["PlanUsage"]},["status","hasAccess","autoRenew"])
+schema("Subscription",{"subscriptionId":string,"plan":ref("Plan"),"startedAt":timestamp,"periodAnchor":timestamp,"trialEndsAt":timestamp,"autoRenew":{"type":"boolean"},"accessEndsAt":timestamp},{"subscriptionId":"SUB-000001","plan":plan,"startedAt":stamp,"periodAnchor":"2026-12-04T09:00:00Z","trialEndsAt":"2026-12-04T09:00:00Z","autoRenew":True},["subscriptionId","plan","startedAt","periodAnchor","autoRenew"])
+schema("SubscribeInput",{"planId":string},{"planId":"PLN-000001"})
+schema("OwnerDetails",{"userId":string,"name":name,"username":string,"email":string,"phone":string},{"userId":"USR-000001","name":"Arun","username":"arun","email":"arun@example.com","phone":"9000000001"})
+schema("BusinessRegistration",{"accountId":string,**business_props,"owner":ref("OwnerDetails"),"isActive":{"type":"boolean"},"createdAt":timestamp,"updatedAt":timestamp,"statusReason":text,"subscription":ref("SubscriptionAccess")},{"accountId":"ACC-000001",**business_example,"owner":examples["OwnerDetails"],"isActive":True,"createdAt":stamp,"updatedAt":stamp,"statusReason":"","subscription":access_example})
+schema("BusinessStatusInput",{"isActive":{"type":"boolean"},"reason":{**text,"minLength":1}},{"isActive":False,"reason":"Account review"})
+for model in ["Plan","BusinessRegistration"]:
+    schema(model+"List",{"items":arr(ref(model)),"page":{"type":"integer"},"limit":{"type":"integer"},"total":{"type":"integer"}},{"items":[examples[model]],"page":1,"limit":20,"total":1})
+schemas["User"]["properties"]["role"]["enum"] = ALL + ["superAdmin"]
+schemas["BusinessAccount"]["properties"].update({"subscription":ref("Subscription"),"trialUsed":{"type":"boolean"}})
+for model in ["LoginResult","SessionProfile"]:
+    schemas[model]["properties"]["account"] = {"type":"object","nullable":True,"allOf":[ref("BusinessAccount")] }
+    schemas[model]["properties"]["access"] = ref("SubscriptionAccess")
+    examples[model]["access"] = {"status":"required","hasAccess":False,"autoRenew":False}
+    schemas[model]["example"] = examples[model]
+# Platform sessions have no tenant account object. Keep that explicit in the contract.
+schemas["BusinessAccount"]["properties"]["accountId"] = {**string,"pattern":"^ACC-[0-9]{6,}$"}
+schemas["BusinessAccount"]["description"] = "Own tenant registration. Platform-owner sessions carry an empty account identity and no operational access."
+
 schema("TripStaffInput", {"warehouseStaffIds": arr(string)}, {"warehouseStaffIds": ["USR-000002"]})
 schema("ReceiveInput", {"locationId": string, "variantId": string, "quantity": quantity, "reason": text}, {"locationId": "LOC-000001", "variantId": "MVN-000001", "quantity": 100, "reason": "Opening stock"}, ["locationId", "variantId", "quantity"])
 schema("TransferInput", {"fromLocationId": string, "toLocationId": string, "variantId": string, "quantity": quantity, "reason": text}, {"fromLocationId": "LOC-000001", "toLocationId": "LOC-000002", "variantId": "MVN-000001", "quantity": 5, "reason": "Storage transfer"}, ["fromLocationId", "toLocationId", "variantId", "quantity"])
@@ -249,11 +276,37 @@ for method, path, summary, response, request, status, roles in [
     if method in ["POST", "PUT"] and request:
         op["responses"]["409"]["content"]["application/json"]["example"] = {"error": {"code": "COUPON_CODE_EXISTS", "message": "This coupon code already exists in your business"}}
 
+platform_description = "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events."
+for method,path,summary,response,request,status in [
+    ("GET","/api/v1/platform/businesses","List tenant registration details","BusinessRegistrationList",None,200),
+    ("PUT","/api/v1/platform/businesses/{id}/status","Deactivate or reactivate a tenant business","BusinessRegistration","BusinessStatusInput",200),
+    ("GET","/api/v1/platform/plans","List subscription plans","PlanList",None,200),
+    ("POST","/api/v1/platform/plans","Create a free recurring plan","Plan","PlanInput",201),
+    ("PUT","/api/v1/platform/plans/{id}","Edit plan terms for new subscriptions","Plan","PlanInput",200),
+    ("POST","/api/v1/platform/plans/{id}/archive","Archive a plan for new subscriptions","Archived",None,200),
+]:
+    op=operation(method,path,summary,["superAdmin"],response,request,status=status,paginate=method=="GET",description=platform_description+" All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.")
+    op["x-account-isolation"]=False
+    if method=="GET":op["parameters"].append({"in":"query","name":"isActive","schema":{"type":"boolean"}})
+    if path.endswith('/status'):
+        op["responses"]["200"]["content"]["application/json"]["example"]={**examples["BusinessRegistration"],"isActive":False,"statusReason":"Account review","subscription":{**access_example,"status":"businessInactive","hasAccess":False}}
+subscription_description = "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed."
+for method,path,summary,roles,response,request in [
+    ("GET","/api/v1/subscription","Read own subscription and capacity",ALL,"SubscriptionAccess",None),
+    ("GET","/api/v1/subscription/plans","Choose from active subscription plans",["admin"],"PlanList",None),
+    ("POST","/api/v1/subscription","Select or change a subscription plan",["admin"],"SubscriptionAccess","SubscribeInput"),
+    ("POST","/api/v1/subscription/cancel","Cancel subscription renewal",["admin"],"SubscriptionAccess",None),
+    ("POST","/api/v1/subscription/resume","Resume renewal before expiry",["admin"],"SubscriptionAccess",None),
+]:
+    op=operation(method,path,summary,roles,response,request,paginate=path.endswith('/plans'),description=subscription_description)
+    if path=="/api/v1/subscription" and method=="GET":
+        c=op["responses"]["200"]["content"]["application/json"];c.pop("example",None);c["examples"]={"trial":{"value":examples["SubscriptionAccess"]},"noPlan":{"value":{"status":"required","hasAccess":False,"autoRenew":False}},"active":{"value":{**examples["SubscriptionAccess"],"status":"active"}}}
+
 operation("GET", "/health", "Liveness", [], "Health")
 operation("POST", "/api/v1/auth/login", "Log in; paste accessToken into Authorize", [], "LoginResult", "LoginInput")
 operation("POST", "/api/v1/auth/signup", "Register a business and its owner admin", [], "LoginResult", "SignupInput", status=201, example={**examples["LoginResult"], "user": {**admin, "name": "Arun", "username": "arun", "email": "arun@example.com", "phone": "9000000001"}}, description="Public admin signup only. Creates one independent business account and its owner atomically. Does not accept role/accountId. Usernames and emails are globally unique. Staff and riders are created by their business admin and use login only.")
 operation("POST", "/api/v1/display-names", "Resolve readable labels for accessible business references", ALL, "DisplayNamesResult", "DisplayNamesInput", description="Read-only batch lookup of up to 200 explicit business IDs, not a directory/list endpoint. Returns names only; never stock, prices, customer contact details, balances or credentials. Missing/inaccessible references are omitted. Every query uses the signed business account. Riders may resolve customer names across their own business for order selection. Staff customer labels and all team labels are restricted to visible orders/trips and own identity; location/vehicle/order/trip restrictions match existing access. Riders resolve invoice numbers only on their own trips; warehouse staff cannot resolve invoices. Archived accessible names remain available for history. IDs remain the values submitted by clients.")
-operation("GET", "/api/v1/auth/me", "Get logged-in user, account and assignments", ALL, "SessionProfile")
+operation("GET", "/api/v1/auth/me", "Get logged-in user, account and assignments", ALL + ["superAdmin"], "SessionProfile")
 operation("GET", "/api/v1/account", "Get own business profile", ALL, "BusinessAccount")
 operation("PUT", "/api/v1/account", "Replace own business profile", ["admin"], "BusinessAccount", "BusinessProfileInput")
 operation("PUT", "/api/v1/trips/{id}/staff", "Assign pickup staff to a planned trip", A, "Trip", "TripStaffInput", description="Admin/manager only; users must be warehouse staff of the same business. Staff must be assigned to the trip. A nonempty user location assignment restricts pickup to those locations; an empty assignment allows any active storage location in the same business.")
@@ -393,6 +446,29 @@ order_request = paths["/api/v1/orders"]["post"]["requestBody"]["content"]["appli
 order_request.pop("example", None)
 order_request["examples"] = {"standard": {"value": examples["OrderInput"]}, "coupon": {"value": {**examples["OrderInput"], "couponId": "CPN-000001"}}, "manualFixed": {"value": {**examples["OrderInput"], "discount": examples["DiscountInput"]}}, "manualPercentage": {"value": {**examples["OrderInput"], "discount": {"type": "percentage", "value": 10, "reason": "Loyal customer"}}}}
 
-spec = {"openapi": "3.0.3", "info": {"title": "Harbor by Code Wayne", "version": "1.11.0", "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."}, "servers": [{"url": "/"}], "paths": paths, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "schemas": schemas}}
+platform_user = {**admin,"accountId":"platform","role":"superAdmin","name":"Harbor owner","username":"harbor.owner"}
+for path,method,standard,platform_value in [
+    ("/api/v1/auth/login","post",examples["LoginResult"],{"accessToken":"<signed-platform-HS256-JWT>","tokenType":"Bearer","expiresIn":28800,"user":platform_user,"account":None}),
+    ("/api/v1/auth/me","get",examples["SessionProfile"],{"user":platform_user,"account":None}),
+]:
+    content=paths[path][method]["responses"]["200"]["content"]["application/json"]
+    content.pop("example",None)
+    content["examples"]={"tenant":{"value":standard},"platformOwner":{"value":platform_value}}
+
+for path,methods in paths.items():
+    for method,op in methods.items():
+        roles=op.get("x-roles",[])
+        if roles and not path.startswith("/api/v1/platform/") and path != "/api/v1/auth/me" and not (path == "/api/v1/account" and method == "get") and not path.startswith("/api/v1/subscription"):
+            op["responses"]["402"]={"description":"Subscription required or expired","content":{"application/json":{"schema":ref("Error"),"examples":{"required":{"value":{"error":{"code":"SUBSCRIPTION_REQUIRED","message":"Choose a subscription plan to use this business"}}},"expired":{"value":{"error":{"code":"SUBSCRIPTION_EXPIRED","message":"Your subscription has ended. Choose a plan to continue"}}}}}}}
+        if roles and roles != ["superAdmin"]:
+            op["responses"]["403"]["content"]["application/json"]["examples"]={"role":{"value":{"error":{"code":"FORBIDDEN","message":"You do not have access to this operation"}}},"inactive":{"value":{"error":{"code":"BUSINESS_INACTIVE","message":"This business is deactivated. Contact Harbor support"}}}}
+            op["responses"]["403"]["content"]["application/json"].pop("example",None)
+        if path in ["/api/v1/products","/api/v1/variants","/api/v1/warehouses","/api/v1/users"] and method=="post":
+            op["description"] += " Plan capacity is enforced transactionally: active variants each count as one SKU; a product without variants reserves one slot. First variant reuses that slot. Delivery partners consume partner capacity; other staff do not. Upgrade when limits are reached."
+            op["responses"]["409"]["content"]["application/json"]["example"]={"error":{"code":"PLAN_LIMIT_REACHED","message":"Your plan limit is reached. Upgrade your subscription to add more"}}
+for path in ["/api/v1/subscription"]:
+    paths[path]["post"]["responses"]["409"]["content"]["application/json"]["example"]={"error":{"code":"PLAN_BELOW_USAGE","message":"Choose a plan that covers your current SKUs, warehouses and delivery partners"}}
+
+spec = {"openapi": "3.0.3", "info": {"title": "Harbor by Code Wayne", "version": "1.12.0", "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."}, "servers": [{"url": "/"}], "paths": paths, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "schemas": schemas}}
 (ROOT / "internal/docs/openapi.yaml").write_text(json.dumps(spec, indent=2) + "\n")
 print(f"Wrote {sum(len(v) for v in paths.values())} operations and {len(schemas)} schemas")

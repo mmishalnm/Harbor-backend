@@ -90,10 +90,16 @@ func testBackend(t *testing.T) testClient {
 	if err := s.Bootstrap(ctx, "admin", "Integration-password-123"); err != nil {
 		t.Fatal(err)
 	}
+	if err := s.BootstrapSuperAdmin(ctx, "platformowner", "Integration-password-123"); err != nil {
+		t.Fatal(err)
+	}
 	server := New(s, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	client := testClient{server: server, db: db}
 	login := must[store.LoginResult](t, client, "POST", "/api/v1/auth/login", map[string]string{"username": "admin", "password": "Integration-password-123"}, 200)
 	client.token = login.AccessToken
+	owner := loginAs(t, client, "platformowner")
+	plan := must[store.Plan](t, owner, "POST", "/api/v1/platform/plans", store.PlanInput{Name: "Integration plan", SKULimit: 1000000, WarehouseLimit: 100000, PartnerLimit: 100000, BillingInterval: "monthly"}, 201)
+	must[store.SubscriptionAccess](t, client, "POST", "/api/v1/subscription", map[string]string{"planId": plan.PlanID}, 200)
 	return client
 }
 func loginAs(t *testing.T, admin testClient, username string) testClient {
