@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Harbor by Code Wayne",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
   },
   "servers": [
@@ -11,6 +11,390 @@
     }
   ],
   "paths": {
+    "/api/v1/analytics/sales": {
+      "get": {
+        "summary": "Sales analytics by period, product, variant and customer",
+        "operationId": "GET_api_v1_analytics_sales",
+        "tags": [
+          "analytics"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Admin/manager only, signed business scope. Read-only, single transaction snapshot. Sales use issued invoice creation dates and saved line amounts, never current variant prices, order quantities or pickup stock. Cancelled invoices are excluded; archived products, variants and customers remain in historical results. Product/variant filters count only matching invoice lines; invoiceCount/customerCount are distinct within the matching set, and averageInvoiceValue is matching sales divided by matching invoices. Collections are receipts dated within the period/customer, independent of invoice dates or payment allocation; they are omitted (null) when filtering a product/variant because receipts cannot be attributed to product lines. Filters apply before every total and pagination. Both date boundaries are inclusive Indian calendar dates. With no dates, defaults to this month through today in IST; dateTo alone uses the first day of that month, dateFrom alone uses today. Maximum 366 days. Variant must belong to selected product; foreign/missing references return NOT_FOUND. Products are ranked by sales descending then variantId, and trends are chronological with zero-sales periods included. Product rows and trend rows paginate independently; page/limit apply to products, trendPage/trendLimit to trend. Daily buckets use YYYY-MM-DD; monthly buckets use the first day of the month and partial boundary months contain only the selected dates. No stock or money is changed.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "dateFrom",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-11-20"
+          },
+          {
+            "in": "query",
+            "name": "dateTo",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-11-20"
+          },
+          {
+            "in": "query",
+            "name": "productId",
+            "schema": {
+              "type": "string",
+              "pattern": "^MPN-[0-9]+$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "variantId",
+            "schema": {
+              "type": "string",
+              "pattern": "^MVN-[0-9]+$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customerId",
+            "schema": {
+              "type": "string",
+              "pattern": "^CUS-[0-9]+$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "groupBy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "month"
+              ],
+              "default": "day"
+            }
+          },
+          {
+            "in": "query",
+            "name": "trendPage",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "trendLimit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 31
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesAnalytics"
+                },
+                "examples": {
+                  "allProducts": {
+                    "value": {
+                      "period": {
+                        "dateFrom": "2026-11-20",
+                        "dateTo": "2026-11-20",
+                        "timeZone": "Asia/Kolkata"
+                      },
+                      "filters": {},
+                      "groupBy": "day",
+                      "summary": {
+                        "salesAmount": 2485,
+                        "unitsSold": 23,
+                        "invoiceCount": 1,
+                        "customerCount": 1,
+                        "averageInvoiceValue": 2485
+                      },
+                      "collections": {
+                        "total": 3500,
+                        "cash": 3500,
+                        "upi": 0,
+                        "bank": 0
+                      },
+                      "collectionsScope": "Customer receipts dated in this period; may settle older invoices or become advance credit. Not sales revenue.",
+                      "products": {
+                        "items": [
+                          {
+                            "productId": "MPN-000001",
+                            "productName": "ICE",
+                            "variantId": "MVN-000001",
+                            "variantName": "5kg",
+                            "unitsSold": 18,
+                            "salesAmount": 2160,
+                            "invoiceCount": 1,
+                            "averageUnitPrice": 120
+                          },
+                          {
+                            "productId": "MPN-000001",
+                            "productName": "ICE",
+                            "variantId": "MVN-000002",
+                            "variantName": "2.5kg",
+                            "unitsSold": 5,
+                            "salesAmount": 325,
+                            "invoiceCount": 1,
+                            "averageUnitPrice": 65
+                          }
+                        ],
+                        "page": 1,
+                        "limit": 20,
+                        "total": 2
+                      },
+                      "trend": {
+                        "items": [
+                          {
+                            "date": "2026-11-20",
+                            "salesAmount": 2485,
+                            "unitsSold": 23,
+                            "invoiceCount": 1
+                          }
+                        ],
+                        "page": 1,
+                        "limit": 31,
+                        "total": 1
+                      },
+                      "generatedAt": "2026-11-20T09:00:00Z"
+                    }
+                  },
+                  "productFilter": {
+                    "value": {
+                      "period": {
+                        "dateFrom": "2026-11-20",
+                        "dateTo": "2026-11-20",
+                        "timeZone": "Asia/Kolkata"
+                      },
+                      "filters": {
+                        "productId": "MPN-000001"
+                      },
+                      "groupBy": "day",
+                      "summary": {
+                        "salesAmount": 2485,
+                        "unitsSold": 23,
+                        "invoiceCount": 1,
+                        "customerCount": 1,
+                        "averageInvoiceValue": 2485
+                      },
+                      "collections": null,
+                      "collectionsScope": "Customer receipts cannot be attributed to a product or variant. Collections are omitted for product-filtered reports.",
+                      "products": {
+                        "items": [
+                          {
+                            "productId": "MPN-000001",
+                            "productName": "ICE",
+                            "variantId": "MVN-000001",
+                            "variantName": "5kg",
+                            "unitsSold": 18,
+                            "salesAmount": 2160,
+                            "invoiceCount": 1,
+                            "averageUnitPrice": 120
+                          },
+                          {
+                            "productId": "MPN-000001",
+                            "productName": "ICE",
+                            "variantId": "MVN-000002",
+                            "variantName": "2.5kg",
+                            "unitsSold": 5,
+                            "salesAmount": 325,
+                            "invoiceCount": 1,
+                            "averageUnitPrice": 65
+                          }
+                        ],
+                        "page": 1,
+                        "limit": 20,
+                        "total": 2
+                      },
+                      "trend": {
+                        "items": [
+                          {
+                            "date": "2026-11-20",
+                            "salesAmount": 2485,
+                            "unitsSold": 23,
+                            "invoiceCount": 1
+                          }
+                        ],
+                        "page": 1,
+                        "limit": 31,
+                        "total": 1
+                      },
+                      "generatedAt": "2026-11-20T09:00:00Z"
+                    }
+                  },
+                  "noSales": {
+                    "value": {
+                      "period": {
+                        "dateFrom": "2026-11-20",
+                        "dateTo": "2026-11-20",
+                        "timeZone": "Asia/Kolkata"
+                      },
+                      "filters": {},
+                      "groupBy": "day",
+                      "summary": {
+                        "salesAmount": 0,
+                        "unitsSold": 0,
+                        "invoiceCount": 0,
+                        "customerCount": 0,
+                        "averageInvoiceValue": 0
+                      },
+                      "collections": {
+                        "total": 0,
+                        "cash": 0,
+                        "upi": 0,
+                        "bank": 0
+                      },
+                      "collectionsScope": "Customer receipts dated in this period; may settle older invoices or become advance credit. Not sales revenue.",
+                      "products": {
+                        "items": [],
+                        "page": 1,
+                        "limit": 20,
+                        "total": 0
+                      },
+                      "trend": {
+                        "items": [
+                          {
+                            "date": "2026-11-20",
+                            "salesAmount": 0,
+                            "unitsSold": 0,
+                            "invoiceCount": 0
+                          }
+                        ],
+                        "page": 1,
+                        "limit": 31,
+                        "total": 1
+                      },
+                      "generatedAt": "2026-11-20T09:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Liveness",
@@ -17272,6 +17656,434 @@
             "code": "VALIDATION_ERROR",
             "message": "Name is required and must be at most 200 bytes"
           }
+        }
+      },
+      "SalesPeriod": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dateFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dateTo": {
+            "type": "string",
+            "format": "date"
+          },
+          "timeZone": {
+            "type": "string",
+            "enum": [
+              "Asia/Kolkata"
+            ]
+          }
+        },
+        "required": [
+          "dateFrom",
+          "dateTo",
+          "timeZone"
+        ],
+        "example": {
+          "dateFrom": "2026-11-20",
+          "dateTo": "2026-11-20",
+          "timeZone": "Asia/Kolkata"
+        }
+      },
+      "SalesSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "salesAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          },
+          "unitsSold": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "invoiceCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "customerCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageInvoiceValue": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "salesAmount",
+          "unitsSold",
+          "invoiceCount",
+          "customerCount",
+          "averageInvoiceValue"
+        ],
+        "example": {
+          "salesAmount": 2485,
+          "unitsSold": 23,
+          "invoiceCount": 1,
+          "customerCount": 1,
+          "averageInvoiceValue": 2485
+        }
+      },
+      "SalesCollections": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "total": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          },
+          "cash": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          },
+          "upi": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          },
+          "bank": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "total",
+          "cash",
+          "upi",
+          "bank"
+        ],
+        "example": {
+          "total": 3500,
+          "cash": 3500,
+          "upi": 0,
+          "bank": 0
+        },
+        "nullable": true
+      },
+      "SalesVariant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "productName": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "variantId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "variantName": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "unitsSold": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "salesAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          },
+          "invoiceCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageUnitPrice": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "productId",
+          "productName",
+          "variantId",
+          "variantName",
+          "unitsSold",
+          "salesAmount",
+          "invoiceCount",
+          "averageUnitPrice"
+        ],
+        "example": {
+          "productId": "MPN-000001",
+          "productName": "ICE",
+          "variantId": "MVN-000001",
+          "variantName": "5kg",
+          "unitsSold": 18,
+          "salesAmount": 2160,
+          "invoiceCount": 1,
+          "averageUnitPrice": 120
+        }
+      },
+      "SalesPoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "salesAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0
+          },
+          "unitsSold": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "invoiceCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "date",
+          "salesAmount",
+          "unitsSold",
+          "invoiceCount"
+        ],
+        "example": {
+          "date": "2026-11-20",
+          "salesAmount": 2485,
+          "unitsSold": 23,
+          "invoiceCount": 1
+        }
+      },
+      "SalesVariantList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesVariant"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "productId": "MPN-000001",
+              "productName": "ICE",
+              "variantId": "MVN-000001",
+              "variantName": "5kg",
+              "unitsSold": 18,
+              "salesAmount": 2160,
+              "invoiceCount": 1,
+              "averageUnitPrice": 120
+            },
+            {
+              "productId": "MPN-000001",
+              "productName": "ICE",
+              "variantId": "MVN-000002",
+              "variantName": "2.5kg",
+              "unitsSold": 5,
+              "salesAmount": 325,
+              "invoiceCount": 1,
+              "averageUnitPrice": 65
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 2
+        }
+      },
+      "SalesPointList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesPoint"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "date": "2026-11-20",
+              "salesAmount": 2485,
+              "unitsSold": 23,
+              "invoiceCount": 1
+            }
+          ],
+          "page": 1,
+          "limit": 31,
+          "total": 1
+        }
+      },
+      "SalesAnalytics": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/SalesPeriod"
+          },
+          "filters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          },
+          "groupBy": {
+            "type": "string",
+            "enum": [
+              "day",
+              "month"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SalesSummary"
+          },
+          "collections": {
+            "$ref": "#/components/schemas/SalesCollections"
+          },
+          "collectionsScope": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "products": {
+            "$ref": "#/components/schemas/SalesVariantList"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/SalesPointList"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "period",
+          "filters",
+          "groupBy",
+          "summary",
+          "collections",
+          "collectionsScope",
+          "products",
+          "trend",
+          "generatedAt"
+        ],
+        "example": {
+          "period": {
+            "dateFrom": "2026-11-20",
+            "dateTo": "2026-11-20",
+            "timeZone": "Asia/Kolkata"
+          },
+          "filters": {},
+          "groupBy": "day",
+          "summary": {
+            "salesAmount": 2485,
+            "unitsSold": 23,
+            "invoiceCount": 1,
+            "customerCount": 1,
+            "averageInvoiceValue": 2485
+          },
+          "collections": {
+            "total": 3500,
+            "cash": 3500,
+            "upi": 0,
+            "bank": 0
+          },
+          "collectionsScope": "Customer receipts dated in this period; may settle older invoices or become advance credit. Not sales revenue.",
+          "products": {
+            "items": [
+              {
+                "productId": "MPN-000001",
+                "productName": "ICE",
+                "variantId": "MVN-000001",
+                "variantName": "5kg",
+                "unitsSold": 18,
+                "salesAmount": 2160,
+                "invoiceCount": 1,
+                "averageUnitPrice": 120
+              },
+              {
+                "productId": "MPN-000001",
+                "productName": "ICE",
+                "variantId": "MVN-000002",
+                "variantName": "2.5kg",
+                "unitsSold": 5,
+                "salesAmount": 325,
+                "invoiceCount": 1,
+                "averageUnitPrice": 65
+              }
+            ],
+            "page": 1,
+            "limit": 20,
+            "total": 2
+          },
+          "trend": {
+            "items": [
+              {
+                "date": "2026-11-20",
+                "salesAmount": 2485,
+                "unitsSold": 23,
+                "invoiceCount": 1
+              }
+            ],
+            "page": 1,
+            "limit": 31,
+            "total": 1
+          },
+          "generatedAt": "2026-11-20T09:00:00Z"
         }
       },
       "ProductList": {

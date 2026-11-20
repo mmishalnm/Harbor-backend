@@ -182,6 +182,27 @@ func (s *Server) register() {
 	}) (any, error) {
 		return s.Store.AssignTripStaff(r.Context(), a, r.PathValue("id"), in.WarehouseStaffIDs)
 	}))
+	s.add("GET", "/api/v1/analytics/sales", admins, 200, func(a store.Actor, r *http.Request) (any, error) {
+		p, err := pagination(r)
+		if err != nil {
+			return nil, err
+		}
+		trend := store.Page{Page: 1, Limit: 31}
+		for key, ptr := range map[string]*int{"trendPage": &trend.Page, "trendLimit": &trend.Limit} {
+			if value := r.URL.Query().Get(key); value != "" {
+				n, err := strconv.Atoi(value)
+				if err != nil {
+					return nil, apperr.Validation("trendPage and trendLimit must be integers")
+				}
+				*ptr = n
+			}
+		}
+		filters := map[string]string{}
+		for _, key := range []string{"dateFrom", "dateTo", "productId", "variantId", "customerId", "groupBy"} {
+			filters[key] = r.URL.Query().Get(key)
+		}
+		return s.Store.SalesAnalytics(r.Context(), a, filters, p, trend)
+	})
 	s.add("POST", "/api/v1/products", admins, 201, body(func(a store.Actor, r *http.Request, in store.ProductInput) (any, error) {
 		return s.Store.CreateProduct(r.Context(), a, in)
 	}))
