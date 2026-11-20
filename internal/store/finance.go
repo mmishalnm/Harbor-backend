@@ -13,7 +13,7 @@ import (
 )
 
 func validMethod(method string) bool { return method == "cash" || method == "upi" || method == "bank" }
-func (s *Store) createInvoice(sc mongo.SessionContext, a Actor, t Trip, o Order, items []Item) (Invoice, error) {
+func (s *Store) createInvoice(sc mongo.SessionContext, a Actor, tripID string, o Order, items []Item) (Invoice, error) {
 	var out Invoice
 	lines := []InvoiceLine{}
 	total := int64(0)
@@ -58,7 +58,7 @@ func (s *Store) createInvoice(sc mongo.SessionContext, a Actor, t Trip, o Order,
 	if err != nil {
 		return out, err
 	}
-	out = Invoice{Base: s.base(), Subtotal: money(total), DiscountAmount: money(discount), Discount: o.Discount, InvoiceID: id, InvoiceNo: no, CustomerID: o.CustomerID, OrderID: o.OrderID, TripID: t.TripID, Lines: lines, Total: money(total - discount), Status: "issued", CreatedBy: a.UserID}
+	out = Invoice{Base: s.base(), Subtotal: money(total), DiscountAmount: money(discount), Discount: o.Discount, InvoiceID: id, InvoiceNo: no, CustomerID: o.CustomerID, OrderID: o.OrderID, TripID: tripID, Lines: lines, Total: money(total - discount), Status: "issued", CreatedBy: a.UserID}
 	return out, insert(sc, s.col("invoices"), out)
 }
 func readAll[T any](ctx context.Context, c *database.Collection, filter bson.M, sortBy bson.D) ([]T, error) {

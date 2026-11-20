@@ -273,13 +273,19 @@ func (s *Server) register() {
 	s.add("POST", "/api/v1/stock/adjust", drivers, 201, body(func(a store.Actor, r *http.Request, in store.AdjustmentInput) (any, error) {
 		return s.Store.Adjust(r.Context(), a, in)
 	}))
-	s.add("GET", "/api/v1/customers/options", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
+	s.add("GET", "/api/v1/customers/options", everyone, 200, func(a store.Actor, r *http.Request) (any, error) {
 		p, err := pagination(r)
 		if err != nil {
 			return nil, err
 		}
 		return s.Store.CustomerOptions(r.Context(), a, p)
 	})
+	s.add("GET", "/api/v1/orders/{id}", everyone, 200, func(a store.Actor, r *http.Request) (any, error) {
+		return s.Store.GetOrder(r.Context(), a, r.PathValue("id"))
+	})
+	s.add("POST", "/api/v1/orders/{id}/collect", everyone, 200, body(func(a store.Actor, r *http.Request, in store.CustomerCollectionInput) (any, error) {
+		return s.Store.CollectCustomerPickup(r.Context(), a, r.PathValue("id"), in)
+	}))
 	s.add("POST", "/api/v1/orders/{id}/assign", admins, 200, body(func(a store.Actor, r *http.Request, in store.AssignOrderInput) (any, error) {
 		return s.Store.AssignOrder(r.Context(), a, r.PathValue("id"), in)
 	}))
@@ -380,7 +386,7 @@ func (s *Server) register() {
 		}
 		return s.Store.CustomerLedger(r.Context(), a, r.PathValue("customerId"), r.PathValue("id"), p, historyQuery(r))
 	})
-	s.add("GET", "/api/v1/invoices/{id}", drivers, 200, func(a store.Actor, r *http.Request) (any, error) {
+	s.add("GET", "/api/v1/invoices/{id}", everyone, 200, func(a store.Actor, r *http.Request) (any, error) {
 		return s.Store.GetInvoice(r.Context(), a, r.PathValue("id"))
 	})
 	s.add("POST", "/api/v1/invoices/{id}/cancel", admins, 200, body(func(a store.Actor, r *http.Request, in struct {
@@ -404,7 +410,7 @@ func (s *Server) register() {
 				return nil, err
 			}
 			f := map[string]string{}
-			for _, key := range []string{"warehouseId", "productId", "locationId", "variantId", "customerId", "tripId", "isActive", "status", "source", "deliveryPartnerId", "dateFrom", "dateTo", "method", "kind", "role", "vehicleId", "receivedBy", "hasDifference"} {
+			for _, key := range []string{"warehouseId", "productId", "locationId", "variantId", "customerId", "tripId", "isActive", "status", "source", "fulfillmentType", "deliveryPartnerId", "dateFrom", "dateTo", "method", "kind", "role", "vehicleId", "receivedBy", "hasDifference"} {
 				f[key] = r.URL.Query().Get(key)
 			}
 			return s.Store.ListResources(r.Context(), a, resource, p, f)

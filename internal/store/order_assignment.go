@@ -19,7 +19,7 @@ type CustomerOption struct {
 
 func (s *Store) CustomerOptions(ctx context.Context, a Actor, p Page) (List[CustomerOption], error) {
 	out := List[CustomerOption]{Items: []CustomerOption{}, Page: p.Page, Limit: p.Limit}
-	if err := allow(a, Admin, Manager, DeliveryPartner); err != nil {
+	if err := allow(a, Admin, Manager, WarehouseStaff, DeliveryPartner); err != nil {
 		return out, err
 	}
 	if err := ValidatePage(p); err != nil {

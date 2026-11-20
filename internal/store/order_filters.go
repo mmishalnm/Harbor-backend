@@ -10,12 +10,22 @@ import (
 // Dates are inclusive Indian calendar days, independent of server timezone.
 func orderFilterConditions(filters map[string]string) (bson.M, error) {
 	out := bson.M{}
+	if mode := filters["fulfillmentType"]; mode != "" {
+		if mode != DeliveryFulfillment && mode != CustomerPickupFulfillment {
+			return nil, apperr.Validation("fulfillmentType must be delivery or customerPickup")
+		}
+		if mode == DeliveryFulfillment {
+			out["fulfillmentType"] = bson.M{"$ne": CustomerPickupFulfillment}
+		} else {
+			out["fulfillmentType"] = mode
+		}
+	}
 	if status := filters["status"]; status != "" {
 		switch status {
-		case "open", "assigned", "delivered", "partiallyDelivered", "failed", "cancelled":
+		case "open", "assigned", "delivered", "partiallyDelivered", "failed", "cancelled", "collected", "partiallyCollected":
 			out["status"] = status
 		default:
-			return nil, apperr.Validation("status must be open, assigned, delivered, partiallyDelivered, failed, or cancelled")
+			return nil, apperr.Validation("status must be open, assigned, delivered, partiallyDelivered, collected, partiallyCollected, failed, or cancelled")
 		}
 	}
 	if source := filters["source"]; source != "" {

@@ -12,15 +12,20 @@ import (
 )
 
 type OrderInput struct {
-	CouponID   string         `json:"couponId,omitempty"`
-	Discount   *DiscountInput `json:"discount,omitempty"`
-	TripID     string         `json:"tripId"`
-	CustomerID string         `json:"customerId"`
-	Source     string         `json:"source"`
-	Items      []Item         `json:"items"`
+	FulfillmentType  string         `json:"fulfillmentType,omitempty"`
+	PickupLocationID string         `json:"pickupLocationId,omitempty"`
+	CouponID         string         `json:"couponId,omitempty"`
+	Discount         *DiscountInput `json:"discount,omitempty"`
+	TripID           string         `json:"tripId"`
+	CustomerID       string         `json:"customerId"`
+	Source           string         `json:"source"`
+	Items            []Item         `json:"items"`
 }
 
 func validateOrder(in OrderInput) error {
+	if err := validateFulfillment(in); err != nil {
+		return err
+	}
 	if err := validItems(in.Items, false); err != nil {
 		return err
 	}
@@ -36,6 +41,14 @@ func (s *Store) newOrder(sc mongo.SessionContext, a Actor, in OrderInput) (Order
 		return out, err
 	}
 	var c Customer
+	if fulfillmentType(in.FulfillmentType) == CustomerPickupFulfillment {
+		if _, err := s.storage(sc, in.PickupLocationID); err != nil {
+			return out, err
+		}
+		if err := checkPickup(a, in.PickupLocationID); err != nil {
+			return out, err
+		}
+	}
 	if err := s.lock(sc, "customers", "customerId", in.CustomerID, &c); err != nil {
 		return out, err
 	}
@@ -58,7 +71,7 @@ func (s *Store) newOrder(sc mongo.SessionContext, a Actor, in OrderInput) (Order
 	if err != nil {
 		return out, err
 	}
-	out = Order{Base: s.base(), Discount: discount, OrderID: id, CustomerID: in.CustomerID, Source: in.Source, Items: in.Items, Picked: []Item{}, Status: "open", CreatedBy: a.UserID}
+	out = Order{Base: s.base(), FulfillmentType: fulfillmentType(in.FulfillmentType), PickupLocationID: in.PickupLocationID, Discount: discount, OrderID: id, CustomerID: in.CustomerID, Source: in.Source, Items: in.Items, Picked: []Item{}, Status: "open", CreatedBy: a.UserID}
 	return out, insert(sc, s.col("orders"), out)
 }
 func (s *Store) CreateOrder(ctx context.Context, a Actor, in OrderInput) (Order, error) {
@@ -76,7 +89,7 @@ func (s *Store) CreateOrder(ctx context.Context, a Actor, in OrderInput) (Order,
 			if err := s.attachOrderToTrip(sc, a, in.TripID, &out); err != nil {
 				return err
 			}
-		} else if a.Role == DeliveryPartner {
+		} else if a.Role == DeliveryPartner && out.FulfillmentType == DeliveryFulfillment {
 			if err := s.autoAssignOrder(sc, a, &out); err != nil {
 				return err
 			}
@@ -176,6 +189,9 @@ func (s *Store) createTrip(sc mongo.SessionContext, in TripInput, now time.Time)
 		if o.Status != "open" || o.TripID != "" {
 			return out, apperr.Conflict("ORDER_ALREADY_ASSIGNED", "Order is already assigned or closed")
 		}
+		if err := requireDeliveryOrder(o); err != nil {
+			return out, err
+		}
 		if err := s.update(sc, "orders", "orderId", oid, bson.M{"tripId": id, "status": "assigned"}); err != nil {
 			return out, err
 		}
@@ -198,6 +214,9 @@ type PickupResult struct {
 
 func (s *Store) Pickup(ctx context.Context, a Actor, tripID string, in PickupInput) (PickupResult, error) {
 	var out PickupResult
+	if in.Order != nil && fulfillmentType(in.Order.FulfillmentType) != DeliveryFulfillment {
+		return out, requireDeliveryOrder(Order{FulfillmentType: in.Order.FulfillmentType})
+	}
 	if err := validItems(in.Items, false); err != nil {
 		return out, err
 	}
@@ -401,7 +420,7 @@ func (s *Store) CloseStop(ctx context.Context, a Actor, tripID, orderID string, 
 			return err
 		}
 		if len(in.Delivered) > 0 {
-			inv, err := s.createInvoice(sc, a, t, o, in.Delivered)
+			inv, err := s.createInvoice(sc, a, t.TripID, o, in.Delivered)
 			if err != nil {
 				return err
 			}

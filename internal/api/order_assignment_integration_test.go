@@ -41,7 +41,7 @@ func TestMongoRiderCustomerOptionsBeforeFirstOrder(t *testing.T) {
 	wantError(t, rider, "GET", "/api/v1/customers/options?limit=201", nil, 400, "VALIDATION_ERROR")
 	createUser(t, c, "optionstaff", store.WarehouseStaff)
 	staff := loginAs(t, c, "optionstaff")
-	wantError(t, staff, "GET", "/api/v1/customers/options", nil, 403, "FORBIDDEN")
+	must[store.List[store.CustomerOption]](t, staff, "GET", "/api/v1/customers/options", nil, 200)
 	order := must[store.Order](t, rider, "POST", "/api/v1/orders", store.OrderInput{CustomerID: alpha.CustomerID, Items: []store.Item{{VariantID: f.variant.VariantID, Quantity: 1}}}, 201)
 	if order.CustomerID != alpha.CustomerID || order.TripID != "" {
 		t.Fatal("could not create first order with selected customer", order)

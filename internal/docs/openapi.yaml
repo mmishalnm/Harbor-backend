@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Harbor by Code Wayne",
-    "version": "1.12.0",
+    "version": "1.13.0",
     "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
   },
   "servers": [
@@ -1464,6 +1464,540 @@
                     }
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "summary": "Read one accessible order and its current reservation",
+        "operationId": "GET_api_v1_orders_id",
+        "tags": [
+          "orders"
+        ],
+        "x-roles": [
+          "admin",
+          "manager",
+          "warehouseStaff",
+          "deliveryPartner"
+        ],
+        "description": "Signed account and existing role visibility apply. Warehouse staff can see pickup orders for their assigned collection locations (all storage if assignment empty); riders see their own created orders or assigned trip orders. Missing/inaccessible order returns NOT_FOUND. This avoids loading every order just to refresh a detail screen.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                },
+                "example": {
+                  "isActive": true,
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z",
+                  "orderId": "ORD-000001",
+                  "customerId": "CUS-000001",
+                  "source": "phone",
+                  "items": [
+                    {
+                      "variantId": "MVN-000001",
+                      "quantity": 20
+                    },
+                    {
+                      "variantId": "MVN-000002",
+                      "quantity": 5
+                    }
+                  ],
+                  "picked": [],
+                  "reservedItems": [
+                    {
+                      "variantId": "MVN-000001",
+                      "quantity": 20
+                    },
+                    {
+                      "variantId": "MVN-000002",
+                      "quantity": 5
+                    }
+                  ],
+                  "awaitingStockItems": [],
+                  "status": "open",
+                  "createdBy": "USR-000001",
+                  "fulfillmentType": "delivery"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "role": {
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "You do not have access to this operation"
+                      }
+                    }
+                  },
+                  "inactive": {
+                    "value": {
+                      "error": {
+                        "code": "BUSINESS_INACTIVE",
+                        "message": "This business is deactivated. Contact Harbor support"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Subscription required or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "required": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_REQUIRED",
+                        "message": "Choose a subscription plan to use this business"
+                      }
+                    }
+                  },
+                  "expired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_EXPIRED",
+                        "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}/collect": {
+      "post": {
+        "summary": "Confirm direct customer collection without a trip",
+        "operationId": "POST_api_v1_orders_id_collect",
+        "tags": [
+          "orders"
+        ],
+        "x-roles": [
+          "admin",
+          "manager",
+          "warehouseStaff",
+          "deliveryPartner"
+        ],
+        "description": "CustomerPickup orders only. Atomic once-only handover from the order's fixed active pickupLocationId, never vehicle stock. Requires current location assignment unless admin/manager, or empty location assignments. Riders may collect only their own created pickup orders; warehouse staff may collect assigned-location pickup orders. Nonempty items must be on the order and no greater than ordered quantities; full or partial collection is final. Partial collection requires reason and releases uncollected reservations. Cancellation of an open order releases reservation without moving stock. FIFO business-wide reservation priority remains enforced; physical quantity must also exist at this specific location, otherwise the entire operation rolls back. Invoice uses current variant prices and the saved discount (fixed discount prorated for partial collection), applies existing advance and allocates actual receipts oldest invoice first; surplus is advance. Staff may record cash/UPI/bank received during this specific handover, without global ledger access. All stock changes use move() with kind customerPickup and invoice reference; stock, invoice numbering, payment, allocations and closed order commit in one WithTx. Empty trip IDs on invoice/payment; no trip or vehicle is created. Duplicate/concurrent attempts return ORDER_ALREADY_CLOSED. Overpayment stays credit. Collected status is collected or partiallyCollected.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCollectionResult"
+                },
+                "example": {
+                  "order": {
+                    "isActive": true,
+                    "createdAt": "2026-11-19T09:00:00Z",
+                    "updatedAt": "2026-11-19T09:00:00Z",
+                    "orderId": "ORD-000001",
+                    "customerId": "CUS-000001",
+                    "source": "counter",
+                    "items": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 2
+                      }
+                    ],
+                    "picked": [],
+                    "reservedItems": [],
+                    "awaitingStockItems": [],
+                    "status": "collected",
+                    "createdBy": "USR-000001",
+                    "fulfillmentType": "customerPickup",
+                    "pickupLocationId": "LOC-000001",
+                    "collection": {
+                      "items": [
+                        {
+                          "variantId": "MVN-000001",
+                          "quantity": 2
+                        }
+                      ],
+                      "invoiceId": "INV-000001",
+                      "paymentId": "PAY-000001",
+                      "collectedBy": "USR-000002",
+                      "collectedAt": "2026-11-19T09:00:00Z"
+                    }
+                  },
+                  "invoice": {
+                    "isActive": true,
+                    "createdAt": "2026-11-19T09:00:00Z",
+                    "updatedAt": "2026-11-19T09:00:00Z",
+                    "invoiceId": "INV-000001",
+                    "invoiceNo": "INV/26-27/00001",
+                    "customerId": "CUS-000001",
+                    "orderId": "ORD-000001",
+                    "tripId": "",
+                    "lines": [
+                      {
+                        "variantId": "MVN-000001",
+                        "name": "5kg",
+                        "quantity": 2,
+                        "unitPrice": 120,
+                        "subtotal": 240,
+                        "discountAmount": 0,
+                        "amount": 240
+                      }
+                    ],
+                    "subtotal": 240,
+                    "discountAmount": 0,
+                    "total": 240,
+                    "status": "issued",
+                    "createdBy": "USR-000002"
+                  },
+                  "payment": {
+                    "paymentId": "PAY-000001",
+                    "customerId": "CUS-000001",
+                    "tripId": "",
+                    "amount": 300,
+                    "method": "cash",
+                    "receivedBy": "USR-000002",
+                    "createdAt": "2026-11-19T09:00:00Z"
+                  },
+                  "movements": [
+                    {
+                      "movementId": "MOV-000001",
+                      "variantId": "MVN-000001",
+                      "quantity": 2,
+                      "fromLocationId": "LOC-000001",
+                      "kind": "customerPickup",
+                      "referenceId": "INV-000001",
+                      "reason": "",
+                      "actorId": "USR-000002",
+                      "createdAt": "2026-11-19T09:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "role": {
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "You do not have access to this operation"
+                      }
+                    }
+                  },
+                  "inactive": {
+                    "value": {
+                      "error": {
+                        "code": "BUSINESS_INACTIVE",
+                        "message": "This business is deactivated. Contact Harbor support"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "closed": {
+                    "value": {
+                      "error": {
+                        "code": "ORDER_ALREADY_CLOSED",
+                        "message": "This pickup order is already collected or closed"
+                      }
+                    }
+                  },
+                  "stock": {
+                    "value": {
+                      "error": {
+                        "code": "INSUFFICIENT_STOCK",
+                        "message": "Source location has insufficient stock"
+                      }
+                    }
+                  },
+                  "location": {
+                    "value": {
+                      "error": {
+                        "code": "LOCATION_NOT_ASSIGNED",
+                        "message": "Stock access is limited to your assigned locations"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Subscription required or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "required": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_REQUIRED",
+                        "message": "Choose a subscription plan to use this business"
+                      }
+                    }
+                  },
+                  "expired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_EXPIRED",
+                        "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCollectionInput"
+              },
+              "example": {
+                "items": [
+                  {
+                    "variantId": "MVN-000001",
+                    "quantity": 2
+                  }
+                ],
+                "collectedAmount": 300,
+                "paymentMethod": "cash"
               }
             }
           }
@@ -9121,7 +9655,9 @@
                 "delivered",
                 "partiallyDelivered",
                 "failed",
-                "cancelled"
+                "cancelled",
+                "collected",
+                "partiallyCollected"
               ]
             }
           },
@@ -9166,6 +9702,18 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "in": "query",
+            "name": "fulfillmentType",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "delivery",
+                "customerPickup"
+              ]
+            },
+            "description": "Delivery includes legacy orders without an explicit fulfillmentType."
           }
         ],
         "responses": {
@@ -9210,7 +9758,8 @@
                           ],
                           "awaitingStockItems": [],
                           "status": "open",
-                          "createdBy": "USR-000001"
+                          "createdBy": "USR-000001",
+                          "fulfillmentType": "delivery"
                         }
                       ],
                       "page": 1,
@@ -9380,7 +9929,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Riders can create orders for customers in their own business. With autoAssignDeliveryPartnerOrders enabled, atomically add a pending stop to their current-window trip, or create a planned trip for today with the assigned vehicle. Started trips are preferred; remaining ties use earliest start/creation/ID. Missing vehicle or a full current trip fails the whole request without creating an orphan order. With the setting disabled, orders remain open. Creating an order never moves physical stock. Unpicked open/assigned quantities reserve storage stock oldest order first. With 225 on hand and an order of 13, reserved is 13 and available is 212. Orders exceeding storage stock remain allowed, with awaitingStockItems until stock arrives. Optional tripId chooses a specific own trip instead of automatic assignment. Existing orders participate immediately; no migration is needed. Optional couponId OR manual discount, never both. Admin/manager manual discounts require a reason; staff/riders can apply only active pre-approved coupons. Terms are snapshotted on order creation. Fixed discounts cannot exceed the current order subtotal. Delivery retains current variant prices: percentage applies to delivered subtotal; fixed discount is prorated by delivered subtotal / full-order subtotal at those same delivery-time prices, capped to prevent a negative invoice. Undelivered goods receive no discount or invoice. Proportional line allocation uses largest remainders so cents sum exactly. Payments, ledger, advance and sales analytics use net totals.",
+        "description": "Riders can create orders for customers in their own business. With autoAssignDeliveryPartnerOrders enabled, atomically add a pending stop to their current-window trip, or create a planned trip for today with the assigned vehicle. Started trips are preferred; remaining ties use earliest start/creation/ID. Missing vehicle or a full current trip fails the whole request without creating an orphan order. With the setting disabled, orders remain open. Creating an order never moves physical stock. Unpicked open/assigned quantities reserve storage stock oldest order first. With 225 on hand and an order of 13, reserved is 13 and available is 212. Orders exceeding storage stock remain allowed, with awaitingStockItems until stock arrives. Optional tripId chooses a specific own trip instead of automatic assignment. Existing orders participate immediately; no migration is needed. Optional couponId OR manual discount, never both. Admin/manager manual discounts require a reason; staff/riders can apply only active pre-approved coupons. Terms are snapshotted on order creation. Fixed discounts cannot exceed the current order subtotal. Delivery retains current variant prices: percentage applies to delivered subtotal; fixed discount is prorated by delivered subtotal / full-order subtotal at those same delivery-time prices, capped to prevent a negative invoice. Undelivered goods receive no discount or invoice. Proportional line allocation uses largest remainders so cents sum exactly. Payments, ledger, advance and sales analytics use net totals. fulfillmentType defaults to delivery. For customerPickup, pickupLocationId is required; tripId is forbidden and rider auto-trip assignment is skipped. The order reserves stock without physical deduction or invoice. Complete it with POST /orders/{id}/collect when the customer actually receives goods. One collection location per order; transfer stock there before handover if necessary. Existing van-loading pickup workflow stays delivery fulfillment.",
         "security": [
           {
             "bearerAuth": []
@@ -9397,7 +9946,7 @@
                   "$ref": "#/components/schemas/Order"
                 },
                 "examples": {
-                  "manual": {
+                  "delivery": {
                     "value": {
                       "isActive": true,
                       "createdAt": "2026-11-19T09:00:00Z",
@@ -9428,42 +9977,36 @@
                       ],
                       "awaitingStockItems": [],
                       "status": "open",
-                      "createdBy": "USR-000001"
+                      "createdBy": "USR-000001",
+                      "fulfillmentType": "delivery"
                     }
                   },
-                  "autoAssignedRider": {
+                  "customerPickup": {
                     "value": {
                       "isActive": true,
                       "createdAt": "2026-11-19T09:00:00Z",
                       "updatedAt": "2026-11-19T09:00:00Z",
                       "orderId": "ORD-000001",
                       "customerId": "CUS-000001",
-                      "source": "deliveryPartner",
+                      "source": "counter",
                       "items": [
                         {
                           "variantId": "MVN-000001",
-                          "quantity": 20
-                        },
-                        {
-                          "variantId": "MVN-000002",
-                          "quantity": 5
+                          "quantity": 2
                         }
                       ],
                       "picked": [],
                       "reservedItems": [
                         {
                           "variantId": "MVN-000001",
-                          "quantity": 20
-                        },
-                        {
-                          "variantId": "MVN-000002",
-                          "quantity": 5
+                          "quantity": 2
                         }
                       ],
                       "awaitingStockItems": [],
-                      "status": "assigned",
-                      "createdBy": "USR-000003",
-                      "tripId": "TRP-000001"
+                      "status": "open",
+                      "createdBy": "USR-000001",
+                      "fulfillmentType": "customerPickup",
+                      "pickupLocationId": "LOC-000001"
                     }
                   }
                 }
@@ -9704,6 +10247,20 @@
                       "value": 10,
                       "reason": "Loyal customer"
                     }
+                  }
+                },
+                "customerPickup": {
+                  "value": {
+                    "customerId": "CUS-000001",
+                    "source": "counter",
+                    "fulfillmentType": "customerPickup",
+                    "pickupLocationId": "LOC-000001",
+                    "items": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 2
+                      }
+                    ]
                   }
                 }
               }
@@ -10045,7 +10602,7 @@
           "manager",
           "deliveryPartner"
         ],
-        "description": "Admin/manager may plan trips for any active partner/vehicle in their business. Delivery partners may create today's trips for themselves using a visible assigned/default vehicle and only their own open orders; cannot assign warehouse staff. Multiple trips on the same day, including the same van, are allowed. Planning does not claim stock or the van. First pickup claims exclusive vehicle use until completion. The van must be empty before another trip loads. Date/duration follow the business Indian calendar policy.",
+        "description": "Admin/manager may plan trips for any active partner/vehicle in their business. Delivery partners may create today's trips for themselves using a visible assigned/default vehicle and only their own open orders; cannot assign warehouse staff. Multiple trips on the same day, including the same van, are allowed. Planning does not claim stock or the van. First pickup claims exclusive vehicle use until completion. The van must be empty before another trip loads. Date/duration follow the business Indian calendar policy. Customer pickup orders cannot be attached to a trip or loaded into a van (PICKUP_ORDER_REQUIRES_COLLECTION).",
         "security": [
           {
             "bearerAuth": []
@@ -10630,7 +11187,8 @@
                 "adjustment",
                 "pickup",
                 "delivery",
-                "return"
+                "return",
+                "customerPickup"
               ]
             }
           },
@@ -12236,9 +12794,10 @@
         "x-roles": [
           "admin",
           "manager",
+          "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Paginated active customer names and business IDs in the signed business account, sorted by name then customer ID. Delivery partners can choose a customer before any order or trip exists. No contacts, balances or global ledgers are returned. Customer creation remains admin/manager only.",
+        "description": "Paginated active customer names and business IDs in the signed business account, sorted by name then customer ID. Delivery partners and counter warehouse staff can choose customer names before any order or trip exists. No contacts, balances or global ledgers are returned. Customer creation remains admin/manager only.",
         "security": [
           {
             "bearerAuth": []
@@ -12439,7 +12998,7 @@
           "admin",
           "manager"
         ],
-        "description": "Admin/manager only. Atomically attaches an open, unpicked order to the selected active delivery partner's current-window trip. Started trips are preferred, then earliest planned trip; optional vehicleId restricts matching to that van. If none exists, creates today's planned trip using the selected or default vehicle and the business trip duration. Works even when automatic rider-order assignment is disabled. All references are scoped to the signed business. Assignment never moves stock. Already assigned/closed orders cannot be reassigned. An explicit tripId targets that trip instead of automatic selection; mismatched partner/vehicle is invalid. Missing vehicle or full trip rolls back the whole operation. Van use is claimed at pickup, so a new planned trip may wait for an earlier loaded trip. The partner then sees the assigned order in their own trip.",
+        "description": "Admin/manager only. Atomically attaches an open, unpicked order to the selected active delivery partner's current-window trip. Started trips are preferred, then earliest planned trip; optional vehicleId restricts matching to that van. If none exists, creates today's planned trip using the selected or default vehicle and the business trip duration. Works even when automatic rider-order assignment is disabled. All references are scoped to the signed business. Assignment never moves stock. Already assigned/closed orders cannot be reassigned. An explicit tripId targets that trip instead of automatic selection; mismatched partner/vehicle is invalid. Missing vehicle or full trip rolls back the whole operation. Van use is claimed at pickup, so a new planned trip may wait for an earlier loaded trip. The partner then sees the assigned order in their own trip. Customer pickup orders cannot be attached to a trip or loaded into a van (PICKUP_ORDER_REQUIRES_COLLECTION).",
         "security": [
           {
             "bearerAuth": []
@@ -12496,6 +13055,7 @@
                   "awaitingStockItems": [],
                   "status": "assigned",
                   "createdBy": "USR-000001",
+                  "fulfillmentType": "delivery",
                   "tripId": "TRP-000001"
                 }
               }
@@ -13827,7 +14387,7 @@
           "manager",
           "deliveryPartner"
         ],
-        "description": "All-or-nothing transaction. Admin/manager may choose a partner (reuse/create trip) or an explicit tripId. Riders must choose their own tripId and may attach only orders they created. A failed order, duplicate ID, mismatched partner/vehicle or trip capacity error rolls back every assignment and any newly created trip. Does not move physical stock or release reservations.",
+        "description": "All-or-nothing transaction. Admin/manager may choose a partner (reuse/create trip) or an explicit tripId. Riders must choose their own tripId and may attach only orders they created. A failed order, duplicate ID, mismatched partner/vehicle or trip capacity error rolls back every assignment and any newly created trip. Does not move physical stock or release reservations. Customer pickup orders cannot be attached to a trip or loaded into a van (PICKUP_ORDER_REQUIRES_COLLECTION).",
         "security": [
           {
             "bearerAuth": []
@@ -13876,6 +14436,7 @@
                       "awaitingStockItems": [],
                       "status": "assigned",
                       "createdBy": "USR-000001",
+                      "fulfillmentType": "delivery",
                       "tripId": "TRP-000001"
                     }
                   ],
@@ -14107,6 +14668,7 @@
                       "awaitingStockItems": [],
                       "status": "cancelled",
                       "createdBy": "USR-000001",
+                      "fulfillmentType": "delivery",
                       "cancelReason": "Customer cancelled before assignment",
                       "cancelledBy": "USR-000001",
                       "cancelledAt": "2026-11-19T09:00:00Z"
@@ -15692,6 +16254,7 @@
                       "awaitingStockItems": [],
                       "status": "assigned",
                       "createdBy": "USR-000001",
+                      "fulfillmentType": "delivery",
                       "tripId": "TRP-000001"
                     }
                   ],
@@ -16070,7 +16633,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Planned or started trip only. Provide either orderId or a new order. Late orders can be picked after departure; goods still move from an authorized storage location into the van. Warehouse staff must be assigned to the trip. Staff/partners with no assigned locations can pick up from any active storage location in their business. With one or more assignments they can pick up only from those locations (LOCATION_NOT_ASSIGNED otherwise). Admin/manager may use any active storage location in their business. Missing/inactive/foreign locations remain unavailable. Pickup atomically consumes this order\u2019s oldest-first reservation and claims exclusive vehicle use. It cannot consume stock reserved for older orders. Another loaded trip on this van returns VEHICLE_BUSY; unused planned trips may share a van. Partners may access only their own trip. Embedded order creation supports the same coupon/manual discount rules.",
+        "description": "Planned or started trip only. Provide either orderId or a new order. Late orders can be picked after departure; goods still move from an authorized storage location into the van. Warehouse staff must be assigned to the trip. Staff/partners with no assigned locations can pick up from any active storage location in their business. With one or more assignments they can pick up only from those locations (LOCATION_NOT_ASSIGNED otherwise). Admin/manager may use any active storage location in their business. Missing/inactive/foreign locations remain unavailable. Pickup atomically consumes this order\u2019s oldest-first reservation and claims exclusive vehicle use. It cannot consume stock reserved for older orders. Another loaded trip on this van returns VEHICLE_BUSY; unused planned trips may share a van. Partners may access only their own trip. Embedded order creation supports the same coupon/manual discount rules. Customer pickup orders cannot be attached to a trip or loaded into a van (PICKUP_ORDER_REQUIRES_COLLECTION).",
         "security": [
           {
             "bearerAuth": []
@@ -16138,6 +16701,7 @@
                     "awaitingStockItems": [],
                     "status": "assigned",
                     "createdBy": "USR-000001",
+                    "fulfillmentType": "delivery",
                     "tripId": "TRP-000001"
                   },
                   "movements": [
@@ -18587,7 +19151,7 @@
     },
     "/api/v1/invoices/{id}": {
       "get": {
-        "summary": "Get invoice; partners own trips only",
+        "summary": "Get an accessible invoice",
         "operationId": "GET_api_v1_invoices_id",
         "tags": [
           "invoices"
@@ -18595,9 +19159,10 @@
         "x-roles": [
           "admin",
           "manager",
+          "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Allowed roles: admin, manager, deliveryPartner",
+        "description": "Allowed roles: admin, manager, warehouseStaff, deliveryPartner Warehouse staff may read only customer-collection invoices at their currently assigned collection locations; empty location assignment allows all business storage. Riders may read invoices on their own trips, or collection invoices for their own created pickup orders at allowed locations. Other financial lists/ledgers remain unchanged.",
         "security": [
           {
             "bearerAuth": []
@@ -22316,6 +22881,18 @@
           "discount": {
             "$ref": "#/components/schemas/DiscountInput",
             "description": "Admin/manager only. Manual discount requires a reason. Cannot combine with a coupon."
+          },
+          "fulfillmentType": {
+            "type": "string",
+            "enum": [
+              "delivery",
+              "customerPickup"
+            ],
+            "default": "delivery"
+          },
+          "pickupLocationId": {
+            "type": "string",
+            "description": "Required for customerPickup. One active storage location; no vehicle/trip."
           }
         },
         "required": [
@@ -22387,6 +22964,18 @@
           "discount": {
             "$ref": "#/components/schemas/Discount"
           },
+          "fulfillmentType": {
+            "type": "string",
+            "enum": [
+              "delivery",
+              "customerPickup"
+            ],
+            "default": "delivery"
+          },
+          "pickupLocationId": {
+            "type": "string",
+            "description": "Required for customerPickup. One active storage location; no vehicle/trip."
+          },
           "picked": {
             "type": "array",
             "items": {
@@ -22427,6 +23016,9 @@
           "createdBy": {
             "type": "string",
             "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "collection": {
+            "$ref": "#/components/schemas/CustomerCollection"
           }
         },
         "required": [
@@ -22439,7 +23031,8 @@
           "items",
           "picked",
           "status",
-          "createdBy"
+          "createdBy",
+          "fulfillmentType"
         ],
         "example": {
           "isActive": true,
@@ -22471,7 +23064,104 @@
           ],
           "awaitingStockItems": [],
           "status": "open",
-          "createdBy": "USR-000001"
+          "createdBy": "USR-000001",
+          "fulfillmentType": "delivery"
+        }
+      },
+      "CustomerCollection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "maxItems": 200
+          },
+          "invoiceId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "paymentId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "collectedBy": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "collectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "items",
+          "invoiceId",
+          "collectedBy",
+          "collectedAt"
+        ],
+        "example": {
+          "items": [
+            {
+              "variantId": "MVN-000001",
+              "quantity": 2
+            }
+          ],
+          "invoiceId": "INV-000001",
+          "paymentId": "PAY-000001",
+          "collectedBy": "USR-000002",
+          "collectedAt": "2026-11-19T09:00:00Z"
+        }
+      },
+      "CustomerCollectionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "maxItems": 200,
+            "minItems": 1
+          },
+          "collectedAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "upi",
+              "bank"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "example": {
+          "items": [
+            {
+              "variantId": "MVN-000001",
+              "quantity": 2
+            }
+          ],
+          "collectedAmount": 300,
+          "paymentMethod": "cash"
         }
       },
       "AssignOrderInput": {
@@ -22854,6 +23544,7 @@
             "awaitingStockItems": [],
             "status": "assigned",
             "createdBy": "USR-000001",
+            "fulfillmentType": "delivery",
             "tripId": "TRP-000001"
           },
           "movements": [
@@ -24499,6 +25190,7 @@
               "awaitingStockItems": [],
               "status": "assigned",
               "createdBy": "USR-000001",
+              "fulfillmentType": "delivery",
               "tripId": "TRP-000001"
             }
           ],
@@ -24982,6 +25674,116 @@
           "generatedAt": "2026-11-20T09:00:00Z"
         }
       },
+      "CustomerCollectionResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "order": {
+            "$ref": "#/components/schemas/Order"
+          },
+          "invoice": {
+            "$ref": "#/components/schemas/Invoice"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/Payment"
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Movement"
+            },
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "order",
+          "invoice",
+          "movements"
+        ],
+        "example": {
+          "order": {
+            "isActive": true,
+            "createdAt": "2026-11-19T09:00:00Z",
+            "updatedAt": "2026-11-19T09:00:00Z",
+            "orderId": "ORD-000001",
+            "customerId": "CUS-000001",
+            "source": "counter",
+            "items": [
+              {
+                "variantId": "MVN-000001",
+                "quantity": 2
+              }
+            ],
+            "picked": [],
+            "reservedItems": [],
+            "awaitingStockItems": [],
+            "status": "collected",
+            "createdBy": "USR-000001",
+            "fulfillmentType": "customerPickup",
+            "pickupLocationId": "LOC-000001",
+            "collection": {
+              "items": [
+                {
+                  "variantId": "MVN-000001",
+                  "quantity": 2
+                }
+              ],
+              "invoiceId": "INV-000001",
+              "paymentId": "PAY-000001",
+              "collectedBy": "USR-000002",
+              "collectedAt": "2026-11-19T09:00:00Z"
+            }
+          },
+          "invoice": {
+            "isActive": true,
+            "createdAt": "2026-11-19T09:00:00Z",
+            "updatedAt": "2026-11-19T09:00:00Z",
+            "invoiceId": "INV-000001",
+            "invoiceNo": "INV/26-27/00001",
+            "customerId": "CUS-000001",
+            "orderId": "ORD-000001",
+            "tripId": "",
+            "lines": [
+              {
+                "variantId": "MVN-000001",
+                "name": "5kg",
+                "quantity": 2,
+                "unitPrice": 120,
+                "subtotal": 240,
+                "discountAmount": 0,
+                "amount": 240
+              }
+            ],
+            "subtotal": 240,
+            "discountAmount": 0,
+            "total": 240,
+            "status": "issued",
+            "createdBy": "USR-000002"
+          },
+          "payment": {
+            "paymentId": "PAY-000001",
+            "customerId": "CUS-000001",
+            "tripId": "",
+            "amount": 300,
+            "method": "cash",
+            "receivedBy": "USR-000002",
+            "createdAt": "2026-11-19T09:00:00Z"
+          },
+          "movements": [
+            {
+              "movementId": "MOV-000001",
+              "variantId": "MVN-000001",
+              "quantity": 2,
+              "fromLocationId": "LOC-000001",
+              "kind": "customerPickup",
+              "referenceId": "INV-000001",
+              "reason": "",
+              "actorId": "USR-000002",
+              "createdAt": "2026-11-19T09:00:00Z"
+            }
+          ]
+        }
+      },
       "ProductList": {
         "type": "object",
         "additionalProperties": false,
@@ -25380,7 +26182,8 @@
               ],
               "awaitingStockItems": [],
               "status": "open",
-              "createdBy": "USR-000001"
+              "createdBy": "USR-000001",
+              "fulfillmentType": "delivery"
             }
           ],
           "page": 1,

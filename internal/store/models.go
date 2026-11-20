@@ -79,12 +79,15 @@ type Item struct {
 	Quantity  int64  `json:"quantity" bson:"quantity"`
 }
 type Order struct {
-	Discount           *Discount  `json:"discount,omitempty" bson:"discount,omitempty"`
-	ReservedItems      []Item     `json:"reservedItems" bson:"-"`
-	AwaitingStockItems []Item     `json:"awaitingStockItems" bson:"-"`
-	CancelReason       string     `json:"cancelReason,omitempty" bson:"cancelReason,omitempty"`
-	CancelledBy        string     `json:"cancelledBy,omitempty" bson:"cancelledBy,omitempty"`
-	CancelledAt        *time.Time `json:"cancelledAt,omitempty" bson:"cancelledAt,omitempty"`
+	FulfillmentType    string              `json:"fulfillmentType" bson:"fulfillmentType,omitempty"`
+	PickupLocationID   string              `json:"pickupLocationId,omitempty" bson:"pickupLocationId,omitempty"`
+	Collection         *CustomerCollection `json:"collection,omitempty" bson:"collection,omitempty"`
+	Discount           *Discount           `json:"discount,omitempty" bson:"discount,omitempty"`
+	ReservedItems      []Item              `json:"reservedItems" bson:"-"`
+	AwaitingStockItems []Item              `json:"awaitingStockItems" bson:"-"`
+	CancelReason       string              `json:"cancelReason,omitempty" bson:"cancelReason,omitempty"`
+	CancelledBy        string              `json:"cancelledBy,omitempty" bson:"cancelledBy,omitempty"`
+	CancelledAt        *time.Time          `json:"cancelledAt,omitempty" bson:"cancelledAt,omitempty"`
 	Base               `bson:",inline"`
 	OrderID            string `json:"orderId" bson:"orderId"`
 	CustomerID         string `json:"customerId" bson:"customerId"`

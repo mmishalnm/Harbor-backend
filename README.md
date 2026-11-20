@@ -1,5 +1,34 @@
 # Harbor-backend
 
+## Direct customer pickup (backend 1.13.0, app 1.10.0+13)
+
+In Flutter: **Orders → Create order → Fulfillment → Customer pickup**. Choose a customer, collection location, items and optional coupon/manual discount. The order reserves goods without moving physical stock or issuing an invoice. It never creates or joins a delivery trip, including when rider auto-trip assignment is enabled.
+
+When the customer arrives, open the order and choose **Confirm customer collection**. Confirm full or partial quantities, provide a reason for a partial collection, and optionally record cash/UPI/bank received. One collection location is supported per order; transfer all required goods to that location before handover. Reservations retain existing business-wide FIFO priority, while the actual debit must succeed at the specific collection location. Shortage anywhere in the transaction rolls back stock, invoice numbers, payment and order closure together.
+
+`POST /api/v1/orders` adds `fulfillmentType: "customerPickup"` and required `pickupLocationId` (no `tripId`). Omit fulfillmentType for existing delivery behavior. `GET /api/v1/orders?fulfillmentType=customerPickup` filters across pages; `delivery` includes legacy orders. `GET /api/v1/orders/{id}` returns one visible order and current reservations so detail refresh does not load the entire order history.
+
+Example creation:
+
+```json
+{"customerId":"CUS-000001","source":"counter","fulfillmentType":"customerPickup","pickupLocationId":"LOC-000001","items":[{"variantId":"MVN-000001","quantity":2}]}
+```
+
+`POST /api/v1/orders/{id}/collect` confirms the handover:
+
+```json
+{"items":[{"variantId":"MVN-000001","quantity":2}],"collectedAmount":300,"paymentMethod":"cash","reason":""}
+```
+
+The response includes the closed order, invoice, optional payment and stock movements. Status becomes `collected` or `partiallyCollected`. A partial collection is final and releases the remaining quantities; create another order for a later collection. An open pickup order can be cancelled through the existing cancel action without moving stock. Empty collection is rejected rather than creating an empty invoice.
+
+The same `WithTx` issues the current-price invoice with the saved order discount, deducts stock only through `move()` (`kind: customerPickup`, invoice reference), allocates advance and receipts oldest invoice first, and closes the order once. Invoice and payment have an empty trip ID. Overpayment stays as advance. Customer ledger, sales analytics and independent rider cash accounting use existing finance rules. Duplicate/concurrent closure returns `ORDER_ALREADY_CLOSED`; no second stock debit, invoice or payment can commit.
+
+Admin/manager can operate within their business. Warehouse staff can see pickup orders for their assigned collection locations (all storage if assignment is empty), complete them and read only those collection invoices; global invoice lists, customer ledgers and other trip invoices stay restricted. Riders can create and collect their own pickup orders at permitted locations. The paginated customer-name options endpoint is now also available to warehouse staff for counter entry; it exposes names/IDs only, not contacts or balances. Current location assignments are checked at each handover and collection-invoice read. Superadmins still cannot access tenant operations.
+
+Pickup orders cannot be assigned, bulk-assigned or included in a trip, nor created through the van-loading pickup operation (`PICKUP_ORDER_REQUIRES_COLLECTION`). The original trip-based **Create the order during pickup** flow remains a delivery order and is separate. Swagger `/docs` documents both flows, examples, changed roles, filters and error envelopes. Deploy backend **1.13.0** before app **1.10.0+13**; the configured Flutter API origin stays unchanged.
+
+
 ## Harbor platform owner and tenant subscriptions (backend 1.12.0 / app 1.9.0)
 
 Harbor's platform owner signs in with the separate **superAdmin** role. All businesses and their admins/managers/staff/riders remain isolated tenants. Public signup always creates a tenant admin and cannot grant platform access. Tenant user creation cannot grant admin or superadmin.

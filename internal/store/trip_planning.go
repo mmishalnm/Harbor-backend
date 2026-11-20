@@ -99,6 +99,9 @@ func (s *Store) claimTripVehicle(sc mongo.SessionContext, t *Trip) error {
 }
 
 func (s *Store) attachOrderToTrip(sc mongo.SessionContext, a Actor, tripID string, order *Order) error {
+	if err := requireDeliveryOrder(*order); err != nil {
+		return err
+	}
 	var t Trip
 	if err := s.lock(sc, "trips", "tripId", tripID, &t); err != nil {
 		return err

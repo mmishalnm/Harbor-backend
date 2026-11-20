@@ -153,7 +153,7 @@ func (d *DB) EnsureIndexes(ctx context.Context) error {
 	if err := unique("trips", bson.D{{Key: "accountId", Value: 1}, {Key: "vehicleId", Value: 1}}, "account_vehicle_reserved", bson.M{"vehicleReserved": true}); err != nil {
 		return err
 	}
-	for col, fields := range map[string][]string{"invoices": {"customerId", "createdAt"}, "payments": {"customerId", "tripId", "createdAt"}, "paymentAllocations": {"customerId"}, "trips": {"deliveryPartnerId", "warehouseStaffIds", "createdAt"}, "stockMovements": {"tripId", "createdAt"}} {
+	for col, fields := range map[string][]string{"orders": {"fulfillmentType", "pickupLocationId", "createdAt", "createdBy"}, "invoices": {"customerId", "createdAt"}, "payments": {"customerId", "tripId", "createdAt"}, "paymentAllocations": {"customerId"}, "trips": {"deliveryPartnerId", "warehouseStaffIds", "createdAt"}, "stockMovements": {"tripId", "createdAt"}} {
 		for _, field := range fields {
 			_, err := d.Mongo.Collection(col).Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "accountId", Value: 1}, {Key: field, Value: 1}}})
 			if err != nil {

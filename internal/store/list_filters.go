@@ -85,7 +85,7 @@ func (s *Store) applyListFilters(ctx context.Context, a Actor, resource string, 
 			out["receivedBy"] = v
 		}
 	case "stockMovements":
-		if err := filterEnum(filters["kind"], "kind", "receive", "transfer", "adjustment", "pickup", "delivery", "return"); err != nil {
+		if err := filterEnum(filters["kind"], "kind", "receive", "transfer", "adjustment", "pickup", "delivery", "return", "customerPickup"); err != nil {
 			return err
 		}
 		if v := filters["kind"]; v != "" {

@@ -129,7 +129,11 @@ func (s *Store) restrictAssignedLists(ctx context.Context, a Actor, resource str
 			if err != nil {
 				return err
 			}
-			filter["$or"] = bson.A{bson.M{"createdBy": a.UserID}, bson.M{"tripId": bson.M{"$in": ids}}}
+			pickup := bson.M{"fulfillmentType": CustomerPickupFulfillment}
+			if len(a.LocationIDs) > 0 {
+				pickup["pickupLocationId"] = bson.M{"$in": a.LocationIDs}
+			}
+			filter["$or"] = bson.A{bson.M{"createdBy": a.UserID}, bson.M{"tripId": bson.M{"$in": ids}}, pickup}
 		}
 	}
 	if resource == "orders" && a.Role == DeliveryPartner {

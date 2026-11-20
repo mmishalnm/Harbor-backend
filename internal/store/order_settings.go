@@ -156,6 +156,9 @@ func (s *Store) autoAssignOrder(sc mongo.SessionContext, a Actor, order *Order) 
 }
 
 func (s *Store) assignOrderToPartner(sc mongo.SessionContext, partnerID, vehicleID string, order *Order) error {
+	if err := requireDeliveryOrder(*order); err != nil {
+		return err
+	}
 	// Serialize both automatic and office assignments with this partner's orders.
 	var partner User
 	if err := s.lock(sc, "users", "userId", partnerID, &partner); err != nil {

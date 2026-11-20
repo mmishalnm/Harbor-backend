@@ -299,13 +299,21 @@ func (s *Store) GetTrip(ctx context.Context, a Actor, id string) (Trip, error) {
 func (s *Store) GetInvoice(ctx context.Context, a Actor, id string) (Invoice, error) {
 	ctx = database.WithAccount(ctx, a.AccountID)
 	var i Invoice
-	if err := allow(a, Admin, Manager, DeliveryPartner); err != nil {
+	if err := allow(a, Admin, Manager, WarehouseStaff, DeliveryPartner); err != nil {
 		return i, err
 	}
 	if err := s.find(ctx, "invoices", "invoiceId", id, &i); err != nil {
 		return i, err
 	}
-	if a.Role == DeliveryPartner {
+	if a.Role == WarehouseStaff || (a.Role == DeliveryPartner && i.TripID == "") {
+		var order Order
+		if err := s.find(ctx, "orders", "orderId", i.OrderID, &order); err != nil {
+			return i, err
+		}
+		if order.Collection == nil || order.Collection.InvoiceID != i.InvoiceID || customerPickupAccess(a, order) != nil {
+			return i, apperr.Forbidden()
+		}
+	} else if a.Role == DeliveryPartner {
 		var t Trip
 		if err := s.find(ctx, "trips", "tripId", i.TripID, &t); err != nil {
 			return i, err
@@ -376,6 +384,8 @@ func (s *Store) Archive(ctx context.Context, a Actor, resource, id string) error
 
 func normalizeRecord(out any) {
 	switch v := out.(type) {
+	case *Order:
+		v.FulfillmentType = fulfillmentType(v.FulfillmentType)
 	case *Invoice:
 		if v.Discount == nil && v.Subtotal == 0 {
 			v.Subtotal = v.Total
