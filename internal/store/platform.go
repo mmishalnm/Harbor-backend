@@ -19,13 +19,14 @@ const SuperAdmin = "superAdmin"
 const platformAccount = "platform"
 
 type PlanInput struct {
-	Name            string `json:"name" bson:"name"`
-	Description     string `json:"description" bson:"description"`
-	SKULimit        int64  `json:"skuLimit" bson:"skuLimit"`
-	WarehouseLimit  int64  `json:"warehouseLimit" bson:"warehouseLimit"`
-	PartnerLimit    int64  `json:"partnerLimit" bson:"partnerLimit"`
-	TrialDays       int    `json:"trialDays" bson:"trialDays"`
-	BillingInterval string `json:"billingInterval" bson:"billingInterval"`
+	Price           *float64 `json:"price,omitempty" bson:"-"`
+	Name            string   `json:"name" bson:"name"`
+	Description     string   `json:"description" bson:"description"`
+	SKULimit        int64    `json:"skuLimit" bson:"skuLimit"`
+	WarehouseLimit  int64    `json:"warehouseLimit" bson:"warehouseLimit"`
+	PartnerLimit    int64    `json:"partnerLimit" bson:"partnerLimit"`
+	TrialDays       int      `json:"trialDays" bson:"trialDays"`
+	BillingInterval string   `json:"billingInterval" bson:"billingInterval"`
 }
 type Plan struct {
 	Base      `bson:",inline"`
@@ -68,6 +69,11 @@ type PlatformEvent struct {
 }
 
 func validatePlan(in PlanInput) error {
+	if in.Price != nil {
+		if err := validMoney(*in.Price, true); err != nil {
+			return err
+		}
+	}
 	if err := validName(in.Name); err != nil {
 		return err
 	}
@@ -172,6 +178,9 @@ func (s *Store) SavePlan(ctx context.Context, a Actor, id string, in PlanInput) 
 				return err
 			}
 			out = Plan{Base: s.base(), PlanID: pid, PlanInput: in, Currency: "INR"}
+			if in.Price != nil {
+				out.Price = RoundMoney(*in.Price)
+			}
 			if _, err = s.rawIdentity("platformPlans").InsertOne(sc, out); err != nil {
 				return err
 			}
@@ -185,8 +194,12 @@ func (s *Store) SavePlan(ctx context.Context, a Actor, id string, in PlanInput) 
 			return err
 		}
 		out.PlanInput = in
+		if in.Price != nil {
+			out.Price = RoundMoney(*in.Price)
+		}
 		out.UpdatedAt = s.now().UTC()
 		fields := bson.M{"name": in.Name, "description": in.Description, "skuLimit": in.SKULimit, "warehouseLimit": in.WarehouseLimit, "partnerLimit": in.PartnerLimit, "trialDays": in.TrialDays, "billingInterval": in.BillingInterval, "updatedAt": out.UpdatedAt}
+		fields["price"] = out.Price
 		if _, err = s.rawIdentity("platformPlans").UpdateOne(sc, bson.M{"planId": id}, bson.M{"$set": fields, "$inc": bson.M{"revision": 1}}); err != nil {
 			return err
 		}

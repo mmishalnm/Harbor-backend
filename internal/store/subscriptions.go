@@ -12,13 +12,17 @@ import (
 )
 
 type Subscription struct {
-	SubscriptionID string     `json:"subscriptionId" bson:"subscriptionId"`
-	Plan           Plan       `json:"plan" bson:"plan"`
-	StartedAt      time.Time  `json:"startedAt" bson:"startedAt"`
-	PeriodAnchor   time.Time  `json:"periodAnchor" bson:"periodAnchor"`
-	TrialEndsAt    *time.Time `json:"trialEndsAt,omitempty" bson:"trialEndsAt,omitempty"`
-	AutoRenew      bool       `json:"autoRenew" bson:"autoRenew"`
-	AccessEndsAt   *time.Time `json:"accessEndsAt,omitempty" bson:"accessEndsAt,omitempty"`
+	PaidFrom       *time.Time        `json:"paidFrom,omitempty" bson:"paidFrom,omitempty"`
+	PaidUntil      *time.Time        `json:"paidUntil,omitempty" bson:"paidUntil,omitempty"`
+	BillingCycle   int64             `json:"billingCycle" bson:"billingCycle"`
+	CurrentBill    *SubscriptionBill `json:"currentBill,omitempty" bson:"currentBill,omitempty"`
+	SubscriptionID string            `json:"subscriptionId" bson:"subscriptionId"`
+	Plan           Plan              `json:"plan" bson:"plan"`
+	StartedAt      time.Time         `json:"startedAt" bson:"startedAt"`
+	PeriodAnchor   time.Time         `json:"periodAnchor" bson:"periodAnchor"`
+	TrialEndsAt    *time.Time        `json:"trialEndsAt,omitempty" bson:"trialEndsAt,omitempty"`
+	AutoRenew      bool              `json:"autoRenew" bson:"autoRenew"`
+	AccessEndsAt   *time.Time        `json:"accessEndsAt,omitempty" bson:"accessEndsAt,omitempty"`
 }
 type PlanUsage struct {
 	SKUs       int64 `json:"skus"`
@@ -26,18 +30,21 @@ type PlanUsage struct {
 	Partners   int64 `json:"partners"`
 }
 type SubscriptionAccess struct {
-	Status         string     `json:"status"`
-	HasAccess      bool       `json:"hasAccess"`
-	SubscriptionID string     `json:"subscriptionId,omitempty"`
-	Plan           *Plan      `json:"plan,omitempty"`
-	TrialEndsAt    *time.Time `json:"trialEndsAt,omitempty"`
-	PeriodStart    *time.Time `json:"periodStart,omitempty"`
-	PeriodEnd      *time.Time `json:"periodEnd,omitempty"`
-	NextRenewalAt  *time.Time `json:"nextRenewalAt,omitempty"`
-	AutoRenew      bool       `json:"autoRenew"`
-	Usage          *PlanUsage `json:"usage,omitempty"`
+	PaidUntil      *time.Time         `json:"paidUntil,omitempty"`
+	Billing        *SubscriptionQuote `json:"billing,omitempty"`
+	Status         string             `json:"status"`
+	HasAccess      bool               `json:"hasAccess"`
+	SubscriptionID string             `json:"subscriptionId,omitempty"`
+	Plan           *Plan              `json:"plan,omitempty"`
+	TrialEndsAt    *time.Time         `json:"trialEndsAt,omitempty"`
+	PeriodStart    *time.Time         `json:"periodStart,omitempty"`
+	PeriodEnd      *time.Time         `json:"periodEnd,omitempty"`
+	NextRenewalAt  *time.Time         `json:"nextRenewalAt,omitempty"`
+	AutoRenew      bool               `json:"autoRenew"`
+	Usage          *PlanUsage         `json:"usage,omitempty"`
 }
 type SubscriptionEvent struct {
+	ActorRole    string       `json:"actorRole" bson:"actorRole"`
 	EventID      string       `json:"eventId" bson:"eventId"`
 	Kind         string       `json:"kind" bson:"kind"`
 	ActorID      string       `json:"actorId" bson:"actorId"`
@@ -86,6 +93,11 @@ func subscriptionAccess(account BusinessAccount, now time.Time) SubscriptionAcce
 		out.Plan = &sub.Plan
 		out.TrialEndsAt = sub.TrialEndsAt
 		out.AutoRenew = sub.AutoRenew
+		out.PaidUntil = sub.PaidUntil
+		if sub.Plan.Price > 0 {
+			quote := subscriptionQuote(*sub)
+			out.Billing = &quote
+		}
 		periodTime := now
 		if !sub.AutoRenew && sub.AccessEndsAt != nil && !now.Before(*sub.AccessEndsAt) {
 			periodTime = sub.AccessEndsAt.Add(-time.Nanosecond)
@@ -106,13 +118,20 @@ func subscriptionAccess(account BusinessAccount, now time.Time) SubscriptionAcce
 		} else if sub.Plan.Price == 0 {
 			out.Status = "active"
 			out.HasAccess = true
+		} else if sub.PaidUntil != nil && now.Before(*sub.PaidUntil) {
+			out.Status = "active"
+			out.HasAccess = true
+			out.PeriodStart = &start
+			out.PeriodEnd = sub.PaidUntil
 		} else {
 			out.Status = "paymentRequired"
-		} // Reserved for a verified recurring-payment integration.
+		} // Paid plans require a recorded manual receipt for each period.
 		if sub.AutoRenew {
 			out.NextRenewalAt = &end
 			if out.Status == "trialing" {
 				out.NextRenewalAt = sub.TrialEndsAt
+			} else if sub.Plan.Price > 0 {
+				out.NextRenewalAt = out.PaidUntil
 			}
 		} else if sub.AccessEndsAt != nil {
 			out.PeriodEnd = sub.AccessEndsAt
@@ -133,6 +152,9 @@ func subscriptionError(access SubscriptionAccess) error {
 	}
 	if access.Status == "required" {
 		return apperr.New(402, "SUBSCRIPTION_REQUIRED", "Choose a subscription plan to use this business")
+	}
+	if access.Status == "paymentRequired" {
+		return apperr.New(402, "SUBSCRIPTION_PAYMENT_REQUIRED", "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval")
 	}
 	return apperr.New(402, "SUBSCRIPTION_EXPIRED", "Your subscription has ended. Choose a plan to continue")
 }
@@ -278,7 +300,15 @@ func (s *Store) saveSubscription(sc mongo.SessionContext, a Actor, account *Busi
 	if err != nil {
 		return err
 	}
-	return insert(sc, s.col("subscriptionEvents"), SubscriptionEvent{EventID: id, Kind: kind, ActorID: a.UserID, Subscription: *account.Subscription, CreatedAt: s.now().UTC()})
+	return insert(sc, s.col("subscriptionEvents"), SubscriptionEvent{ActorRole: a.Role, EventID: id, Kind: kind, ActorID: a.UserID, Subscription: *account.Subscription, CreatedAt: s.now().UTC()})
+}
+
+// A tenant may explicitly accept updated terms of the same plan. Existing
+// snapshots are never silently repriced when the platform edits the catalog.
+func samePlanTerms(a, b Plan) bool {
+	x, y := a.PlanInput, b.PlanInput
+	x.Price, y.Price = nil, nil
+	return a.PlanID == b.PlanID && x == y && cents(a.Price) == cents(b.Price) && a.Currency == b.Currency
 }
 func (s *Store) Subscribe(ctx context.Context, a Actor, planID string) (SubscriptionAccess, error) {
 	var out SubscriptionAccess
@@ -294,8 +324,8 @@ func (s *Store) Subscribe(ctx context.Context, a Actor, planID string) (Subscrip
 		if err != nil {
 			return err
 		}
-		if plan.Price != 0 {
-			return apperr.Conflict("PAYMENT_SETUP_REQUIRED", "This plan requires a verified recurring payment setup")
+		if account.Subscription != nil && account.Subscription.CurrentBill != nil && account.Subscription.CurrentBill.Status == "pending" && cents(account.Subscription.CurrentBill.PaidAmount) > 0 {
+			return apperr.Conflict("BILL_HAS_PARTIAL_PAYMENT", "Complete the current subscription payment before changing plans")
 		}
 		usage, err := s.planUsage(sc)
 		if err != nil {
@@ -305,7 +335,7 @@ func (s *Store) Subscribe(ctx context.Context, a Actor, planID string) (Subscrip
 			return apperr.Conflict("PLAN_BELOW_USAGE", "Choose a plan that covers your current SKUs, warehouses and delivery partners")
 		}
 		current := subscriptionAccess(*account, s.now())
-		if current.HasAccess && account.Subscription.Plan.PlanID == planID {
+		if current.HasAccess && samePlanTerms(account.Subscription.Plan, plan) {
 			return apperr.Conflict("ALREADY_SUBSCRIBED", "This plan is already selected. Resume renewal if it was cancelled")
 		}
 		now := s.now().UTC().Truncate(time.Millisecond)
@@ -353,6 +383,9 @@ func (s *Store) SetSubscriptionRenewal(ctx context.Context, a Actor, renew bool)
 			end := access.PeriodEnd
 			if access.Status == "trialing" {
 				end = access.TrialEndsAt
+			}
+			if account.Subscription.PaidUntil != nil && account.Subscription.PaidUntil.After(*end) {
+				end = account.Subscription.PaidUntil
 			}
 			account.Subscription.AccessEndsAt = end
 		}

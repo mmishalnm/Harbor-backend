@@ -1,5 +1,19 @@
 # Harbor-backend
 
+## Plan charges and manual subscription billing (backend 1.14.0 / app 1.11.0+14)
+
+Harbor's **superadmin** sets the INR charge per monthly/yearly cycle at **Platform → Plans → Create/Edit plan → Charge per billing cycle**. `price: 0` keeps a free plan. Omitted price defaults to zero on create and preserves the old fee on edit. Accepted subscriptions keep their saved price/limits; editing a catalog plan does not silently reprice existing tenants. A tenant can explicitly switch to its updated terms. No previous payment is transferred, prorated or refunded on a plan switch.
+
+After choosing a paid plan, the business can use its one-time trial. When trial/prepaid coverage ends, operational APIs return `402 SUBSCRIPTION_PAYMENT_REQUIRED`, and the app asks for payment. Login, subscription status, coupons and receipt history remain available. A free plan stays available without payment. There is no payment gateway or automatic bank charge.
+
+To confirm money received, superadmin opens **Businesses → business → Subscription payments → Record payment**, enters the actual amount, payment method, transaction reference (required for UPI/bank) and collection note. Partial receipts are supported but only full coverage unlocks a paid period. Early payment extends trial/prepaid coverage; late payment starts a fresh period at approval, without charging for blocked days. Renewals repeat the same process each month/year. Deactivated businesses stay deactivated even after receipt. Cancellations retain all prepaid coverage.
+
+**Platform → Plans → Subscription coupons** manages separate percentage/fixed subscription codes. Tenant admin applies a code under **Subscription → Apply subscription coupon** before any receipt is recorded. Discount is capped to the fee and applies to one bill only. Next cycle uses the full accepted fee unless another code is applied. Coupon edits/archive do not rewrite a saved bill; changing a coupon after partial payment returns `BILL_LOCKED`. A fully discounted bill still needs a superadmin zero-amount `waiver` approval. Tenant order coupons are separate.
+
+Swagger workflow: `POST /platform/plans` accepts `price`; tenant selects plan; optionally `POST /subscription/coupon`; superadmin `POST /platform/businesses/{accountId}/subscription/bill` prepares/reuses the unpaid bill, then `POST .../payments` records `{billId, requestId, amount, method, reference, note}`. Keep requestId/body identical on retries: exact replay returns the original receipt; changed data conflicts. `GET .../subscription` returns only billing metadata, never tenant operational usage/sales. Tenant `GET /subscription/payments` and superadmin `GET .../subscription/payments` are paginated, newest first. Paths are prefixed `/api/v1`.
+
+Platform billing uses append-only `SPR-` receipts, `SBI-` bills and `SCP-` coupon IDs in separate global collections. It never changes tenant invoices, customer balances, partner cash or the gapless sales invoice number series. Receipt, bill, paid coverage and audit events commit in one `WithTx`, serialized per account. Deploy backend **1.14.0** before installing app **1.11.0+14**. Existing subscriptions must explicitly accept paid terms to start billing; old free snapshots remain free.
+
 ## Direct customer pickup (backend 1.13.0, app 1.10.0+13)
 
 In Flutter: **Orders → Create order → Fulfillment → Customer pickup**. Choose a customer, collection location, items and optional coupon/manual discount. The order reserves goods without moving physical stock or issuing an invoice. It never creates or joins a delivery trip, including when rider auto-trip assignment is enabled.
@@ -47,7 +61,7 @@ Create an initial plan before tenants use the application:
 {"name":"Starter","description":"For small distributors","skuLimit":100,"warehouseLimit":2,"partnerLimit":5,"trialDays":14,"billingInterval":"monthly"}
 ```
 
-Plans support monthly/yearly recurring periods and 0–365 trial days. **All plans are currently INR 0.** No payment method is requested, no money is charged, and a payment gateway is not connected. A nonzero-price subscription is refused with `PAYMENT_SETUP_REQUIRED` until verified recurring payments are implemented. Plan IDs use the global atomic `PLN-` series; accepted subscriptions use tenant `SUB-` IDs. Trial/plan changes and status changes run in `WithTx` and append audit records.
+Plans support monthly/yearly recurring periods, configurable INR charges and 0–365 trial days. Free plans renew automatically; paid plans use the manual billing process above. A payment gateway is not connected. Plan IDs use the global atomic `PLN-` series; accepted subscriptions use tenant `SUB-` IDs. Trial/plan changes and status changes run in `WithTx` and append audit records.
 
 New, existing and migrated businesses without a subscription receive `402 SUBSCRIPTION_REQUIRED` for operational APIs. Login, own profile and subscription management remain available. Tenant admin chooses a plan at `POST /api/v1/subscription` with `{"planId":"PLN-000001"}`. `GET /api/v1/subscription/plans` lists active plans; `GET /api/v1/subscription` shows status, accepted terms and next renewal. Admin/manager sees usage; staff sees status only and cannot subscribe/cancel/resume. The Flutter app forces plan selection before opening operations and sends blocked staff to their business admin.
 
@@ -55,7 +69,7 @@ SKU usage is active variants plus active products that do not yet have an active
 
 The first selected subscription grants the trial once per business. Switching plans keeps only any remaining trial and never grants another. A plan's limits, description, trial and renewal interval are snapshotted; later edits/archiving apply to new subscriptions only. Existing subscribers retain their accepted terms. Free subscriptions renew deterministically from their persisted anchor; no scheduler is needed. Indian calendar billing dates keep the original day (31 January → last day of February → 31 March; leap-year dates recover). Free-period access remains active after trial and across missed app openings.
 
-`POST /api/v1/subscription/cancel` stops renewal at trial/current-period end; `.../resume` resumes before expiry. Cancellation does not delete data or end access immediately. At expiry, operational APIs return `402 SUBSCRIPTION_EXPIRED`, and the owner must select a plan again without a fresh trial. Deactivation does not pause or extend trials. Paid recurring collection, checkout, webhook verification and failed-payment retries remain a future payment-provider integration, not simulated transactions.
+`POST /api/v1/subscription/cancel` stops renewal at trial/current-period end; `.../resume` resumes before expiry. Cancellation does not delete data or end access immediately. At expiry, operational APIs return `402 SUBSCRIPTION_EXPIRED`, and the owner must select a plan again without a fresh trial. Deactivation does not pause or extend trials. Paid subscriptions use manual collections described above; online checkout, webhook verification and automatic charge retries remain future provider integration.
 
 Deploy backend **1.12.0** on Render before app **1.9.0+12**. Set the platform bootstrap credentials, create a free plan, then have tenant owners subscribe. Normal Go hosting remains `go build -o harbor .` followed by `./harbor -env-file .env`. Swagger `/docs` documents role scopes, plan schemas, pagination, trial/active/required responses, platform sessions and access/limit errors.
 

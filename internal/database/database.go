@@ -122,13 +122,27 @@ func (d *DB) EnsureIndexes(ctx context.Context) error {
 	if err := unique("platformCounters", bson.D{{Key: "counterName", Value: 1}}, "counterName_1", nil); err != nil {
 		return err
 	}
-	for col, field := range map[string]string{"platformPlans": "planId", "platformEvents": "eventId"} {
+	for col, field := range map[string]string{"platformPlans": "planId", "platformEvents": "eventId", "subscriptionBills": "billId", "subscriptionPayments": "paymentId", "subscriptionCoupons": "couponId"} {
 		if err := unique(col, bson.D{{Key: field, Value: 1}}, field+"_1", nil); err != nil {
 			return err
 		}
 	}
 	for col, field := range BusinessIDs {
 		if err := unique(col, bson.D{{Key: "accountId", Value: 1}, {Key: field, Value: 1}}, "account_"+field, nil); err != nil {
+			return err
+		}
+	}
+	if err := unique("subscriptionCoupons", bson.D{{Key: "code", Value: 1}}, "subscription_coupon_code", nil); err != nil {
+		return err
+	}
+	if err := unique("subscriptionPayments", bson.D{{Key: "requestId", Value: 1}}, "subscription_payment_request", nil); err != nil {
+		return err
+	}
+	if err := unique("subscriptionBills", bson.D{{Key: "accountId", Value: 1}, {Key: "subscriptionId", Value: 1}, {Key: "cycle", Value: 1}}, "subscription_bill_cycle", nil); err != nil {
+		return err
+	}
+	for _, col := range []string{"subscriptionPayments", "subscriptionBills"} {
+		if _, err := d.Mongo.Collection(col).Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "accountId", Value: 1}, {Key: "createdAt", Value: -1}}}); err != nil {
 			return err
 		}
 	}

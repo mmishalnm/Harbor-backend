@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Harbor by Code Wayne",
-    "version": "1.13.0",
+    "version": "1.14.0",
     "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
   },
   "servers": [
@@ -405,7 +405,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -425,6 +425,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -600,7 +608,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -620,6 +628,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -828,7 +844,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -848,6 +864,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -1033,7 +1057,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1053,6 +1077,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -1258,7 +1290,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1278,6 +1310,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -1440,7 +1480,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1460,6 +1500,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -1654,7 +1702,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1674,6 +1722,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -1954,7 +2010,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1974,6 +2030,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -2014,7 +2078,7 @@
         "x-roles": [
           "superAdmin"
         ],
-        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.",
+        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.",
         "security": [
           {
             "bearerAuth": []
@@ -2101,7 +2165,7 @@
                           "partnerLimit": 5,
                           "trialDays": 14,
                           "billingInterval": "monthly",
-                          "price": 0,
+                          "price": 500,
                           "currency": "INR"
                         },
                         "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -2228,7 +2292,7 @@
         "x-roles": [
           "superAdmin"
         ],
-        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.",
+        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.",
         "security": [
           {
             "bearerAuth": []
@@ -2295,7 +2359,7 @@
                       "partnerLimit": 5,
                       "trialDays": 14,
                       "billingInterval": "monthly",
-                      "price": 0,
+                      "price": 500,
                       "currency": "INR"
                     },
                     "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -2447,7 +2511,7 @@
         "x-roles": [
           "superAdmin"
         ],
-        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.",
+        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.",
         "security": [
           {
             "bearerAuth": []
@@ -2505,7 +2569,7 @@
                       "partnerLimit": 5,
                       "trialDays": 14,
                       "billingInterval": "monthly",
-                      "price": 0,
+                      "price": 500,
                       "currency": "INR"
                     }
                   ],
@@ -2615,7 +2679,7 @@
         }
       },
       "post": {
-        "summary": "Create a free recurring plan",
+        "summary": "Create a recurring plan with an INR charge",
         "operationId": "POST_api_v1_platform_plans",
         "tags": [
           "platform"
@@ -2623,7 +2687,7 @@
         "x-roles": [
           "superAdmin"
         ],
-        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.",
+        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.",
         "security": [
           {
             "bearerAuth": []
@@ -2651,7 +2715,7 @@
                   "partnerLimit": 5,
                   "trialDays": 14,
                   "billingInterval": "monthly",
-                  "price": 0,
+                  "price": 500,
                   "currency": "INR"
                 }
               }
@@ -2784,7 +2848,8 @@
                 "warehouseLimit": 2,
                 "partnerLimit": 5,
                 "trialDays": 14,
-                "billingInterval": "monthly"
+                "billingInterval": "monthly",
+                "price": 500
               }
             }
           }
@@ -2801,7 +2866,7 @@
         "x-roles": [
           "superAdmin"
         ],
-        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.",
+        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.",
         "security": [
           {
             "bearerAuth": []
@@ -2839,7 +2904,7 @@
                   "partnerLimit": 5,
                   "trialDays": 14,
                   "billingInterval": "monthly",
-                  "price": 0,
+                  "price": 500,
                   "currency": "INR"
                 }
               }
@@ -2972,7 +3037,8 @@
                 "warehouseLimit": 2,
                 "partnerLimit": 5,
                 "trialDays": 14,
-                "billingInterval": "monthly"
+                "billingInterval": "monthly",
+                "price": 500
               }
             }
           }
@@ -2989,7 +3055,7 @@
         "x-roles": [
           "superAdmin"
         ],
-        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.",
+        "description": "Harbor platform owner only. May read registration/owner contact details, manage plans and deactivate/reactivate tenant accounts. No tenant impersonation, customers, stock, sales, invoices, payments or staff directory access. Cross-tenant operational APIs always return FORBIDDEN to superAdmin. Signup and tenant user creation cannot grant this role. Bootstrap a separate login with SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD. Changes are transactional and append audit events. Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.",
         "security": [
           {
             "bearerAuth": []
@@ -3133,7 +3199,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed.",
+        "description": "Subscription is required before tenant operations. Only tenant admin can select/cancel/resume; staff contact their business admin. Trials are granted once; switching preserves remaining trial, never restarts it. Accepted price, limits and renewal terms are snapshotted; edits and archives affect new subscriptions only. Free plans auto-renew without receipts. Paid plans require Harbor superadmin to record manual receipts each cycle. Trial/paid expiry blocks operations with SUBSCRIPTION_PAYMENT_REQUIRED until a bill is fully covered. Partial receipts do not activate access. Coupons apply to one bill only, including during trial, and never carry automatically into renewal. Zero net bills still require superadmin waiver approval. Cancel retains trial/prepaid coverage; no automatic charge occurs. Late payment starts a fresh period at approval; early payment extends trial/paid end. Indian calendar anchors preserve month-end/leap days. Switching plans does not transfer or refund payments; pending partial payments must be completed first. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants, and capacity is enforced transactionally with plan changes. Existing records are retained.",
         "security": [
           {
             "bearerAuth": []
@@ -3167,7 +3233,7 @@
                         "partnerLimit": 5,
                         "trialDays": 14,
                         "billingInterval": "monthly",
-                        "price": 0,
+                        "price": 500,
                         "currency": "INR"
                       },
                       "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -3206,7 +3272,7 @@
                         "partnerLimit": 5,
                         "trialDays": 14,
                         "billingInterval": "monthly",
-                        "price": 0,
+                        "price": 500,
                         "currency": "INR"
                       },
                       "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -3218,6 +3284,48 @@
                         "skus": 2,
                         "warehouses": 1,
                         "partners": 1
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "status": "paymentRequired",
+                      "hasAccess": false,
+                      "subscriptionId": "SUB-000001",
+                      "plan": {
+                        "isActive": true,
+                        "createdAt": "2026-11-19T09:00:00Z",
+                        "updatedAt": "2026-11-19T09:00:00Z",
+                        "planId": "PLN-000001",
+                        "name": "Starter",
+                        "description": "For growing distributors",
+                        "skuLimit": 100,
+                        "warehouseLimit": 2,
+                        "partnerLimit": 5,
+                        "trialDays": 14,
+                        "billingInterval": "monthly",
+                        "price": 500,
+                        "currency": "INR"
+                      },
+                      "trialEndsAt": "2026-12-04T09:00:00Z",
+                      "periodStart": "2026-11-20T09:00:00Z",
+                      "periodEnd": "2026-12-04T09:00:00Z",
+                      "nextRenewalAt": "2026-12-04T09:00:00Z",
+                      "autoRenew": true,
+                      "billing": {
+                        "billId": "SBI-000001",
+                        "subtotal": 500,
+                        "discount": {
+                          "couponId": "SCP-000001",
+                          "code": "WELCOME10",
+                          "name": "Welcome discount",
+                          "type": "percentage",
+                          "value": 10
+                        },
+                        "discountAmount": 50,
+                        "total": 450,
+                        "paidAmount": 200,
+                        "amountDue": 250
                       }
                     }
                   }
@@ -3344,7 +3452,7 @@
         "x-roles": [
           "admin"
         ],
-        "description": "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed.",
+        "description": "Subscription is required before tenant operations. Only tenant admin can select/cancel/resume; staff contact their business admin. Trials are granted once; switching preserves remaining trial, never restarts it. Accepted price, limits and renewal terms are snapshotted; edits and archives affect new subscriptions only. Free plans auto-renew without receipts. Paid plans require Harbor superadmin to record manual receipts each cycle. Trial/paid expiry blocks operations with SUBSCRIPTION_PAYMENT_REQUIRED until a bill is fully covered. Partial receipts do not activate access. Coupons apply to one bill only, including during trial, and never carry automatically into renewal. Zero net bills still require superadmin waiver approval. Cancel retains trial/prepaid coverage; no automatic charge occurs. Late payment starts a fresh period at approval; early payment extends trial/paid end. Indian calendar anchors preserve month-end/leap days. Switching plans does not transfer or refund payments; pending partial payments must be completed first. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants, and capacity is enforced transactionally with plan changes. Existing records are retained.",
         "security": [
           {
             "bearerAuth": []
@@ -3376,7 +3484,7 @@
                     "partnerLimit": 5,
                     "trialDays": 14,
                     "billingInterval": "monthly",
-                    "price": 0,
+                    "price": 500,
                     "currency": "INR"
                   },
                   "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -3543,7 +3651,7 @@
         "x-roles": [
           "admin"
         ],
-        "description": "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed.",
+        "description": "Subscription is required before tenant operations. Only tenant admin can select/cancel/resume; staff contact their business admin. Trials are granted once; switching preserves remaining trial, never restarts it. Accepted price, limits and renewal terms are snapshotted; edits and archives affect new subscriptions only. Free plans auto-renew without receipts. Paid plans require Harbor superadmin to record manual receipts each cycle. Trial/paid expiry blocks operations with SUBSCRIPTION_PAYMENT_REQUIRED until a bill is fully covered. Partial receipts do not activate access. Coupons apply to one bill only, including during trial, and never carry automatically into renewal. Zero net bills still require superadmin waiver approval. Cancel retains trial/prepaid coverage; no automatic charge occurs. Late payment starts a fresh period at approval; early payment extends trial/paid end. Indian calendar anchors preserve month-end/leap days. Switching plans does not transfer or refund payments; pending partial payments must be completed first. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants, and capacity is enforced transactionally with plan changes. Existing records are retained.",
         "security": [
           {
             "bearerAuth": []
@@ -3594,7 +3702,7 @@
                       "partnerLimit": 5,
                       "trialDays": 14,
                       "billingInterval": "monthly",
-                      "price": 0,
+                      "price": 500,
                       "currency": "INR"
                     }
                   ],
@@ -3726,7 +3834,7 @@
         "x-roles": [
           "admin"
         ],
-        "description": "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed.",
+        "description": "Subscription is required before tenant operations. Only tenant admin can select/cancel/resume; staff contact their business admin. Trials are granted once; switching preserves remaining trial, never restarts it. Accepted price, limits and renewal terms are snapshotted; edits and archives affect new subscriptions only. Free plans auto-renew without receipts. Paid plans require Harbor superadmin to record manual receipts each cycle. Trial/paid expiry blocks operations with SUBSCRIPTION_PAYMENT_REQUIRED until a bill is fully covered. Partial receipts do not activate access. Coupons apply to one bill only, including during trial, and never carry automatically into renewal. Zero net bills still require superadmin waiver approval. Cancel retains trial/prepaid coverage; no automatic charge occurs. Late payment starts a fresh period at approval; early payment extends trial/paid end. Indian calendar anchors preserve month-end/leap days. Switching plans does not transfer or refund payments; pending partial payments must be completed first. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants, and capacity is enforced transactionally with plan changes. Existing records are retained.",
         "security": [
           {
             "bearerAuth": []
@@ -3758,7 +3866,7 @@
                     "partnerLimit": 5,
                     "trialDays": 14,
                     "billingInterval": "monthly",
-                    "price": 0,
+                    "price": 500,
                     "currency": "INR"
                   },
                   "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -3896,7 +4004,7 @@
         "x-roles": [
           "admin"
         ],
-        "description": "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed.",
+        "description": "Subscription is required before tenant operations. Only tenant admin can select/cancel/resume; staff contact their business admin. Trials are granted once; switching preserves remaining trial, never restarts it. Accepted price, limits and renewal terms are snapshotted; edits and archives affect new subscriptions only. Free plans auto-renew without receipts. Paid plans require Harbor superadmin to record manual receipts each cycle. Trial/paid expiry blocks operations with SUBSCRIPTION_PAYMENT_REQUIRED until a bill is fully covered. Partial receipts do not activate access. Coupons apply to one bill only, including during trial, and never carry automatically into renewal. Zero net bills still require superadmin waiver approval. Cancel retains trial/prepaid coverage; no automatic charge occurs. Late payment starts a fresh period at approval; early payment extends trial/paid end. Indian calendar anchors preserve month-end/leap days. Switching plans does not transfer or refund payments; pending partial payments must be completed first. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants, and capacity is enforced transactionally with plan changes. Existing records are retained.",
         "security": [
           {
             "bearerAuth": []
@@ -3928,7 +4036,7 @@
                     "partnerLimit": 5,
                     "trialDays": 14,
                     "billingInterval": "monthly",
-                    "price": 0,
+                    "price": 500,
                     "currency": "INR"
                   },
                   "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -4050,6 +4158,1929 @@
                     "message": "An internal error occurred"
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/businesses/{id}/subscription": {
+      "get": {
+        "summary": "Read subscription billing without tenant sales data",
+        "operationId": "GET_api_v1_platform_businesses_id_subscription",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionAccess"
+                },
+                "example": {
+                  "status": "trialing",
+                  "hasAccess": true,
+                  "subscriptionId": "SUB-000001",
+                  "plan": {
+                    "isActive": true,
+                    "createdAt": "2026-11-19T09:00:00Z",
+                    "updatedAt": "2026-11-19T09:00:00Z",
+                    "planId": "PLN-000001",
+                    "name": "Starter",
+                    "description": "For growing distributors",
+                    "skuLimit": 100,
+                    "warehouseLimit": 2,
+                    "partnerLimit": 5,
+                    "trialDays": 14,
+                    "billingInterval": "monthly",
+                    "price": 500,
+                    "currency": "INR"
+                  },
+                  "trialEndsAt": "2026-12-04T09:00:00Z",
+                  "periodStart": "2026-11-20T09:00:00Z",
+                  "periodEnd": "2026-12-04T09:00:00Z",
+                  "nextRenewalAt": "2026-12-04T09:00:00Z",
+                  "autoRenew": true,
+                  "usage": {
+                    "skus": 2,
+                    "warehouses": 1,
+                    "partners": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/businesses/{id}/subscription/bill": {
+      "post": {
+        "summary": "Prepare or reuse the current unpaid bill",
+        "operationId": "POST_api_v1_platform_businesses_id_subscription_bill",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionBill"
+                },
+                "example": {
+                  "billId": "SBI-000001",
+                  "accountId": "ACC-000001",
+                  "subscriptionId": "SUB-000001",
+                  "cycle": 1,
+                  "plan": {
+                    "isActive": true,
+                    "createdAt": "2026-11-19T09:00:00Z",
+                    "updatedAt": "2026-11-19T09:00:00Z",
+                    "planId": "PLN-000001",
+                    "name": "Starter",
+                    "description": "For growing distributors",
+                    "skuLimit": 100,
+                    "warehouseLimit": 2,
+                    "partnerLimit": 5,
+                    "trialDays": 14,
+                    "billingInterval": "monthly",
+                    "price": 500,
+                    "currency": "INR"
+                  },
+                  "subtotal": 500,
+                  "discount": {
+                    "couponId": "SCP-000001",
+                    "code": "WELCOME10",
+                    "name": "Welcome discount",
+                    "type": "percentage",
+                    "value": 10
+                  },
+                  "discountAmount": 50,
+                  "total": 450,
+                  "paidAmount": 200,
+                  "status": "pending",
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/businesses/{id}/subscription/payments": {
+      "post": {
+        "summary": "Record an actual subscription collection",
+        "operationId": "POST_api_v1_platform_businesses_id_subscription_payments",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded. Prepare a bill first. billId must match the current pending bill. Positive amount must not exceed outstanding balance. cash/upi/bank require actual receipt; UPI/bank require reference; note is always required. waiver with amount=0 is allowed only for a fully discounted bill. No other approval flag is accepted. Exact requestId/body replay returns the original receipt without extending access twice; changed payload returns IDEMPOTENCY_CONFLICT. Concurrent receipts are serialized per account. Full payment activates one monthly/yearly period; partial payments leave paid access blocked. No bank/card/UPI gateway call is performed.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPaymentResult"
+                },
+                "examples": {
+                  "fullyPaid": {
+                    "value": {
+                      "payment": {
+                        "paymentId": "SPR-000002",
+                        "accountId": "ACC-000001",
+                        "subscriptionId": "SUB-000001",
+                        "billId": "SBI-000001",
+                        "requestId": "manual-subscription-payment-001",
+                        "amount": 250,
+                        "method": "cash",
+                        "reference": "",
+                        "note": "Cash collected from the business owner",
+                        "recordedBy": "USR-000001",
+                        "createdAt": "2026-11-19T09:00:00Z"
+                      },
+                      "bill": {
+                        "billId": "SBI-000001",
+                        "accountId": "ACC-000001",
+                        "subscriptionId": "SUB-000001",
+                        "cycle": 1,
+                        "plan": {
+                          "isActive": true,
+                          "createdAt": "2026-11-19T09:00:00Z",
+                          "updatedAt": "2026-11-19T09:00:00Z",
+                          "planId": "PLN-000001",
+                          "name": "Starter",
+                          "description": "For growing distributors",
+                          "skuLimit": 100,
+                          "warehouseLimit": 2,
+                          "partnerLimit": 5,
+                          "trialDays": 14,
+                          "billingInterval": "monthly",
+                          "price": 500,
+                          "currency": "INR"
+                        },
+                        "subtotal": 500,
+                        "discount": {
+                          "couponId": "SCP-000001",
+                          "code": "WELCOME10",
+                          "name": "Welcome discount",
+                          "type": "percentage",
+                          "value": 10
+                        },
+                        "discountAmount": 50,
+                        "total": 450,
+                        "paidAmount": 450,
+                        "status": "paid",
+                        "createdAt": "2026-11-19T09:00:00Z",
+                        "updatedAt": "2026-11-19T09:00:00Z",
+                        "paidAt": "2026-11-19T09:00:00Z",
+                        "periodStart": "2026-12-04T09:00:00Z",
+                        "periodEnd": "2027-01-04T09:00:00Z"
+                      },
+                      "access": {
+                        "status": "trialing",
+                        "hasAccess": true,
+                        "subscriptionId": "SUB-000001",
+                        "plan": {
+                          "isActive": true,
+                          "createdAt": "2026-11-19T09:00:00Z",
+                          "updatedAt": "2026-11-19T09:00:00Z",
+                          "planId": "PLN-000001",
+                          "name": "Starter",
+                          "description": "For growing distributors",
+                          "skuLimit": 100,
+                          "warehouseLimit": 2,
+                          "partnerLimit": 5,
+                          "trialDays": 14,
+                          "billingInterval": "monthly",
+                          "price": 500,
+                          "currency": "INR"
+                        },
+                        "trialEndsAt": "2026-12-04T09:00:00Z",
+                        "periodStart": "2026-11-20T09:00:00Z",
+                        "periodEnd": "2026-12-04T09:00:00Z",
+                        "nextRenewalAt": "2026-12-04T09:00:00Z",
+                        "autoRenew": true,
+                        "paidUntil": "2027-01-04T09:00:00Z",
+                        "billing": {
+                          "subtotal": 500,
+                          "discountAmount": 0,
+                          "total": 500,
+                          "paidAmount": 0,
+                          "amountDue": 500
+                        }
+                      }
+                    }
+                  },
+                  "partial": {
+                    "value": {
+                      "payment": {
+                        "paymentId": "SPR-000002",
+                        "accountId": "ACC-000001",
+                        "subscriptionId": "SUB-000001",
+                        "billId": "SBI-000001",
+                        "requestId": "manual-subscription-payment-001",
+                        "amount": 200,
+                        "method": "cash",
+                        "reference": "",
+                        "note": "Cash collected from the business owner",
+                        "recordedBy": "USR-000001",
+                        "createdAt": "2026-11-19T09:00:00Z"
+                      },
+                      "bill": {
+                        "billId": "SBI-000001",
+                        "accountId": "ACC-000001",
+                        "subscriptionId": "SUB-000001",
+                        "cycle": 1,
+                        "plan": {
+                          "isActive": true,
+                          "createdAt": "2026-11-19T09:00:00Z",
+                          "updatedAt": "2026-11-19T09:00:00Z",
+                          "planId": "PLN-000001",
+                          "name": "Starter",
+                          "description": "For growing distributors",
+                          "skuLimit": 100,
+                          "warehouseLimit": 2,
+                          "partnerLimit": 5,
+                          "trialDays": 14,
+                          "billingInterval": "monthly",
+                          "price": 500,
+                          "currency": "INR"
+                        },
+                        "subtotal": 500,
+                        "discount": {
+                          "couponId": "SCP-000001",
+                          "code": "WELCOME10",
+                          "name": "Welcome discount",
+                          "type": "percentage",
+                          "value": 10
+                        },
+                        "discountAmount": 50,
+                        "total": 450,
+                        "paidAmount": 200,
+                        "status": "pending",
+                        "createdAt": "2026-11-19T09:00:00Z",
+                        "updatedAt": "2026-11-19T09:00:00Z"
+                      },
+                      "access": {
+                        "status": "paymentRequired",
+                        "hasAccess": false,
+                        "subscriptionId": "SUB-000001",
+                        "plan": {
+                          "isActive": true,
+                          "createdAt": "2026-11-19T09:00:00Z",
+                          "updatedAt": "2026-11-19T09:00:00Z",
+                          "planId": "PLN-000001",
+                          "name": "Starter",
+                          "description": "For growing distributors",
+                          "skuLimit": 100,
+                          "warehouseLimit": 2,
+                          "partnerLimit": 5,
+                          "trialDays": 14,
+                          "billingInterval": "monthly",
+                          "price": 500,
+                          "currency": "INR"
+                        },
+                        "trialEndsAt": "2026-12-04T09:00:00Z",
+                        "periodStart": "2026-11-20T09:00:00Z",
+                        "periodEnd": "2026-12-04T09:00:00Z",
+                        "nextRenewalAt": "2026-12-04T09:00:00Z",
+                        "autoRenew": true,
+                        "billing": {
+                          "billId": "SBI-000001",
+                          "subtotal": 500,
+                          "discount": {
+                            "couponId": "SCP-000001",
+                            "code": "WELCOME10",
+                            "name": "Welcome discount",
+                            "type": "percentage",
+                            "value": 10
+                          },
+                          "discountAmount": 50,
+                          "total": 450,
+                          "paidAmount": 200,
+                          "amountDue": 250
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "IDEMPOTENCY_CONFLICT",
+                    "message": "This requestId was already used for different subscription payment details"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionPaymentInput"
+              },
+              "example": {
+                "billId": "SBI-000001",
+                "requestId": "manual-subscription-payment-001",
+                "amount": 250,
+                "method": "cash",
+                "reference": "",
+                "note": "Cash collected from the business owner"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List subscription receipts for this business",
+        "operationId": "GET_api_v1_platform_businesses_id_subscription_payments",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPaymentList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "paymentId": "SPR-000002",
+                      "accountId": "ACC-000001",
+                      "subscriptionId": "SUB-000001",
+                      "billId": "SBI-000001",
+                      "requestId": "manual-subscription-payment-001",
+                      "amount": 250,
+                      "method": "cash",
+                      "reference": "",
+                      "note": "Cash collected from the business owner",
+                      "recordedBy": "USR-000001",
+                      "createdAt": "2026-11-19T09:00:00Z"
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/subscription-coupons": {
+      "get": {
+        "summary": "List platform subscription coupons",
+        "operationId": "GET_api_v1_platform_subscription-coupons",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "isActive",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionCouponList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "couponId": "SCP-000001",
+                      "name": "Welcome discount",
+                      "code": "WELCOME10",
+                      "type": "percentage",
+                      "value": 10
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create percentage or fixed subscription coupon",
+        "operationId": "POST_api_v1_platform_subscription-coupons",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionCoupon"
+                },
+                "example": {
+                  "isActive": true,
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z",
+                  "couponId": "SCP-000001",
+                  "name": "Welcome discount",
+                  "code": "WELCOME10",
+                  "type": "percentage",
+                  "value": 10
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponInput"
+              },
+              "example": {
+                "name": "Welcome discount",
+                "code": "WELCOME10",
+                "type": "percentage",
+                "value": 10
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/subscription-coupons/{id}": {
+      "put": {
+        "summary": "Edit subscription coupon for future applications",
+        "operationId": "PUT_api_v1_platform_subscription-coupons_id",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionCoupon"
+                },
+                "example": {
+                  "isActive": true,
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z",
+                  "couponId": "SCP-000001",
+                  "name": "Welcome discount",
+                  "code": "WELCOME10",
+                  "type": "percentage",
+                  "value": 10
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponInput"
+              },
+              "example": {
+                "name": "Welcome discount",
+                "code": "WELCOME10",
+                "type": "percentage",
+                "value": 10
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/subscription-coupons/{id}/archive": {
+      "post": {
+        "summary": "Archive subscription coupon",
+        "operationId": "POST_api_v1_platform_subscription-coupons_id_archive",
+        "tags": [
+          "platform"
+        ],
+        "x-roles": [
+          "superAdmin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Archived"
+                },
+                "example": {
+                  "isActive": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscription/payments": {
+      "get": {
+        "summary": "Read own subscription receipts",
+        "operationId": "GET_api_v1_subscription_payments",
+        "tags": [
+          "subscription"
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded. Signed tenant only. Remains available while payment is required; tenant cannot record or approve subscription payments.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPaymentList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "paymentId": "SPR-000002",
+                      "accountId": "ACC-000001",
+                      "subscriptionId": "SUB-000001",
+                      "billId": "SBI-000001",
+                      "requestId": "manual-subscription-payment-001",
+                      "amount": 250,
+                      "method": "cash",
+                      "reference": "",
+                      "note": "Cash collected from the business owner",
+                      "recordedBy": "USR-000001",
+                      "createdAt": "2026-11-19T09:00:00Z"
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "role": {
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "You do not have access to this operation"
+                      }
+                    }
+                  },
+                  "inactive": {
+                    "value": {
+                      "error": {
+                        "code": "BUSINESS_INACTIVE",
+                        "message": "This business is deactivated. Contact Harbor support"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscription/coupon": {
+      "post": {
+        "summary": "Apply or clear a coupon on the next subscription bill",
+        "operationId": "POST_api_v1_subscription_coupon",
+        "tags": [
+          "subscription"
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "description": "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded. Remains available while payment is required. Code is normalized uppercase; invalid/archived codes are rejected. Materializes the bill, applies percentage or fixed discount capped to fee, and saves a snapshot. Empty code clears it. After any partial payment, BILL_LOCKED prevents coupon changes. A 100% discount still requires Harbor superadmin waiver approval. Order coupons cannot be used here.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionAccess"
+                },
+                "example": {
+                  "status": "trialing",
+                  "hasAccess": true,
+                  "subscriptionId": "SUB-000001",
+                  "plan": {
+                    "isActive": true,
+                    "createdAt": "2026-11-19T09:00:00Z",
+                    "updatedAt": "2026-11-19T09:00:00Z",
+                    "planId": "PLN-000001",
+                    "name": "Starter",
+                    "description": "For growing distributors",
+                    "skuLimit": 100,
+                    "warehouseLimit": 2,
+                    "partnerLimit": 5,
+                    "trialDays": 14,
+                    "billingInterval": "monthly",
+                    "price": 500,
+                    "currency": "INR"
+                  },
+                  "trialEndsAt": "2026-12-04T09:00:00Z",
+                  "periodStart": "2026-11-20T09:00:00Z",
+                  "periodEnd": "2026-12-04T09:00:00Z",
+                  "nextRenewalAt": "2026-12-04T09:00:00Z",
+                  "autoRenew": true,
+                  "billing": {
+                    "billId": "SBI-000001",
+                    "subtotal": 500,
+                    "discount": {
+                      "couponId": "SCP-000001",
+                      "code": "WELCOME10",
+                      "name": "Welcome discount",
+                      "type": "percentage",
+                      "value": 10
+                    },
+                    "discountAmount": 50,
+                    "total": 450,
+                    "paidAmount": 0,
+                    "amountDue": 450
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "role": {
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "You do not have access to this operation"
+                      }
+                    }
+                  },
+                  "inactive": {
+                    "value": {
+                      "error": {
+                        "code": "BUSINESS_INACTIVE",
+                        "message": "This business is deactivated. Contact Harbor support"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "BILL_LOCKED",
+                    "message": "Coupons cannot be changed after a payment has been recorded"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCouponInput"
+              },
+              "example": {
+                "code": "WELCOME10"
               }
             }
           }
@@ -4778,7 +6809,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -4798,6 +6829,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -5372,7 +7411,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -5392,6 +7431,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -5615,7 +7662,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -5635,6 +7682,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -5805,7 +7860,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -5825,6 +7880,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -5991,7 +8054,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6011,6 +8074,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -6211,7 +8282,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6231,6 +8302,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -6486,7 +8565,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6506,6 +8585,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -6677,7 +8764,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6697,6 +8784,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -6955,7 +9050,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6975,6 +9070,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -7148,7 +9251,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -7168,6 +9271,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -7425,7 +9536,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -7445,6 +9556,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -7615,7 +9734,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -7635,6 +9754,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -7891,7 +10018,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -7911,6 +10038,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -8083,7 +10218,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -8103,6 +10238,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -8360,7 +10503,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -8380,6 +10523,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -8551,7 +10702,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -8571,6 +10722,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -8826,7 +10985,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -8846,6 +11005,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -9018,7 +11185,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -9038,6 +11205,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -9309,7 +11484,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -9329,6 +11504,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -9502,7 +11685,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -9522,6 +11705,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -9888,7 +12079,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -9908,6 +12099,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -10138,7 +12337,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -10158,6 +12357,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -10562,7 +12769,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -10582,6 +12789,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -10770,7 +12985,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -10790,6 +13005,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -11052,7 +13275,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -11072,6 +13295,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -11346,7 +13577,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -11366,6 +13597,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -11660,7 +13899,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -11680,6 +13919,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -11957,7 +14204,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -11977,6 +14224,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -12164,7 +14419,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -12184,6 +14439,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -12467,7 +14730,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -12487,6 +14750,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -12754,7 +15025,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -12774,6 +15045,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -12957,7 +15236,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -12977,6 +15256,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -13198,7 +15485,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -13218,6 +15505,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -13422,7 +15717,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -13442,6 +15737,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -13702,7 +16005,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -13722,6 +16025,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -13931,7 +16242,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -13951,6 +16262,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -14135,7 +16454,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -14155,6 +16474,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -14345,7 +16672,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -14365,6 +16692,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -14570,7 +16905,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -14590,6 +16925,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -14803,7 +17146,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -14823,6 +17166,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -15025,7 +17376,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -15045,6 +17396,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -15263,7 +17622,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -15283,6 +17642,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -15475,7 +17842,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -15495,6 +17862,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -15689,7 +18064,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -15709,6 +18084,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -15902,7 +18285,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -15922,6 +18305,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -16123,7 +18514,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -16143,6 +18534,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -16374,7 +18773,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -16394,6 +18793,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -16590,7 +18997,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -16610,6 +19017,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -16881,7 +19296,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -16901,6 +19316,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -17109,7 +19532,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -17129,6 +19552,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -17377,7 +19808,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -17397,6 +19828,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -17614,7 +20053,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -17634,6 +20073,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -17850,7 +20297,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -17870,6 +20317,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -18057,7 +20512,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -18077,6 +20532,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -18301,7 +20764,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -18321,6 +20784,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -18541,7 +21012,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -18561,6 +21032,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -18825,7 +21304,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -18845,6 +21324,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -19119,7 +21606,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -19139,6 +21626,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -19383,7 +21878,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -19403,6 +21898,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -19614,7 +22117,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -19634,6 +22137,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -19809,7 +22320,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -19829,6 +22340,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -19991,7 +22510,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -20011,6 +22530,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -20173,7 +22700,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -20193,6 +22720,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -20354,7 +22889,7 @@
             }
           },
           "402": {
-            "description": "Subscription required or expired",
+            "description": "Subscription required, expired, or payment needed",
             "content": {
               "application/json": {
                 "schema": {
@@ -20374,6 +22909,14 @@
                       "error": {
                         "code": "SUBSCRIPTION_EXPIRED",
                         "message": "Your subscription has ended. Choose a plan to continue"
+                      }
+                    }
+                  },
+                  "paymentRequired": {
+                    "value": {
+                      "error": {
+                        "code": "SUBSCRIPTION_PAYMENT_REQUIRED",
+                        "message": "Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"
                       }
                     }
                   }
@@ -21645,6 +24188,13 @@
               "monthly",
               "yearly"
             ]
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000,
+            "description": "INR charge per monthly/yearly cycle; 0 is free. Omitted on create defaults to 0; omitted on edit preserves the existing charge. Accepted subscriptions retain their snapshotted price."
           }
         },
         "required": [
@@ -21662,7 +24212,8 @@
           "warehouseLimit": 2,
           "partnerLimit": 5,
           "trialDays": 14,
-          "billingInterval": "monthly"
+          "billingInterval": "monthly",
+          "price": 500
         }
       },
       "Plan": {
@@ -21722,9 +24273,9 @@
           },
           "price": {
             "type": "number",
-            "enum": [
-              0
-            ]
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
           },
           "currency": {
             "type": "string",
@@ -21760,7 +24311,7 @@
           "partnerLimit": 5,
           "trialDays": 14,
           "billingInterval": "monthly",
-          "price": 0,
+          "price": 500,
           "currency": "INR"
         }
       },
@@ -21838,6 +24389,13 @@
           },
           "usage": {
             "$ref": "#/components/schemas/PlanUsage"
+          },
+          "paidUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "billing": {
+            "$ref": "#/components/schemas/SubscriptionQuote"
           }
         },
         "required": [
@@ -21861,7 +24419,7 @@
             "partnerLimit": 5,
             "trialDays": 14,
             "billingInterval": "monthly",
-            "price": 0,
+            "price": 500,
             "currency": "INR"
           },
           "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -21905,6 +24463,21 @@
           "accessEndsAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "paidFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paidUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "billingCycle": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currentBill": {
+            "$ref": "#/components/schemas/SubscriptionBill"
           }
         },
         "required": [
@@ -21928,7 +24501,7 @@
             "partnerLimit": 5,
             "trialDays": 14,
             "billingInterval": "monthly",
-            "price": 0,
+            "price": 500,
             "currency": "INR"
           },
           "startedAt": "2026-11-19T09:00:00Z",
@@ -22099,7 +24672,7 @@
               "partnerLimit": 5,
               "trialDays": 14,
               "billingInterval": "monthly",
-              "price": 0,
+              "price": 500,
               "currency": "INR"
             },
             "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -22173,7 +24746,7 @@
               "partnerLimit": 5,
               "trialDays": 14,
               "billingInterval": "monthly",
-              "price": 0,
+              "price": 500,
               "currency": "INR"
             }
           ],
@@ -22252,7 +24825,7 @@
                   "partnerLimit": 5,
                   "trialDays": 14,
                   "billingInterval": "monthly",
-                  "price": 0,
+                  "price": 500,
                   "currency": "INR"
                 },
                 "trialEndsAt": "2026-12-04T09:00:00Z",
@@ -25243,6 +27816,630 @@
           "error": {
             "code": "VALIDATION_ERROR",
             "message": "Name is required and must be at most 200 bytes"
+          }
+        }
+      },
+      "SubscriptionQuote": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "billId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "discount": {
+            "$ref": "#/components/schemas/Discount"
+          },
+          "discountAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "total": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "paidAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "amountDue": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          }
+        },
+        "required": [
+          "subtotal",
+          "discountAmount",
+          "total",
+          "paidAmount",
+          "amountDue"
+        ],
+        "example": {
+          "billId": "SBI-000001",
+          "subtotal": 500,
+          "discount": {
+            "couponId": "SCP-000001",
+            "code": "WELCOME10",
+            "name": "Welcome discount",
+            "type": "percentage",
+            "value": 10
+          },
+          "discountAmount": 50,
+          "total": 450,
+          "paidAmount": 200,
+          "amountDue": 250
+        }
+      },
+      "SubscriptionBill": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "billId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "subscriptionId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "cycle": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "discount": {
+            "$ref": "#/components/schemas/Discount"
+          },
+          "discountAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "total": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "paidAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "paid"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "billId",
+          "accountId",
+          "subscriptionId",
+          "cycle",
+          "plan",
+          "subtotal",
+          "discountAmount",
+          "total",
+          "paidAmount",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "example": {
+          "billId": "SBI-000001",
+          "accountId": "ACC-000001",
+          "subscriptionId": "SUB-000001",
+          "cycle": 1,
+          "plan": {
+            "isActive": true,
+            "createdAt": "2026-11-19T09:00:00Z",
+            "updatedAt": "2026-11-19T09:00:00Z",
+            "planId": "PLN-000001",
+            "name": "Starter",
+            "description": "For growing distributors",
+            "skuLimit": 100,
+            "warehouseLimit": 2,
+            "partnerLimit": 5,
+            "trialDays": 14,
+            "billingInterval": "monthly",
+            "price": 500,
+            "currency": "INR"
+          },
+          "subtotal": 500,
+          "discount": {
+            "couponId": "SCP-000001",
+            "code": "WELCOME10",
+            "name": "Welcome discount",
+            "type": "percentage",
+            "value": 10
+          },
+          "discountAmount": 50,
+          "total": 450,
+          "paidAmount": 200,
+          "status": "pending",
+          "createdAt": "2026-11-19T09:00:00Z",
+          "updatedAt": "2026-11-19T09:00:00Z"
+        }
+      },
+      "SubscriptionPaymentInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "billId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "requestId": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "description": "Unique idempotency key; retain the same body/key when retrying."
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "upi",
+              "bank",
+              "waiver"
+            ]
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "billId",
+          "requestId",
+          "amount",
+          "method",
+          "note"
+        ],
+        "example": {
+          "billId": "SBI-000001",
+          "requestId": "manual-subscription-payment-001",
+          "amount": 250,
+          "method": "cash",
+          "reference": "",
+          "note": "Cash collected from the business owner"
+        }
+      },
+      "SubscriptionPayment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "paymentId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "subscriptionId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "billId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "requestId": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "description": "Unique idempotency key; retain the same body/key when retrying."
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "upi",
+              "bank",
+              "waiver"
+            ]
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1
+          },
+          "recordedBy": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "paymentId",
+          "accountId",
+          "subscriptionId",
+          "billId",
+          "requestId",
+          "amount",
+          "method",
+          "reference",
+          "note",
+          "recordedBy",
+          "createdAt"
+        ],
+        "example": {
+          "paymentId": "SPR-000002",
+          "accountId": "ACC-000001",
+          "subscriptionId": "SUB-000001",
+          "billId": "SBI-000001",
+          "requestId": "manual-subscription-payment-001",
+          "amount": 250,
+          "method": "cash",
+          "reference": "",
+          "note": "Cash collected from the business owner",
+          "recordedBy": "USR-000001",
+          "createdAt": "2026-11-19T09:00:00Z"
+        }
+      },
+      "SubscriptionPaymentList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionPayment"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "paymentId": "SPR-000002",
+              "accountId": "ACC-000001",
+              "subscriptionId": "SUB-000001",
+              "billId": "SBI-000001",
+              "requestId": "manual-subscription-payment-001",
+              "amount": 250,
+              "method": "cash",
+              "reference": "",
+              "note": "Cash collected from the business owner",
+              "recordedBy": "USR-000001",
+              "createdAt": "2026-11-19T09:00:00Z"
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      },
+      "SubscriptionCouponInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "description": "An active subscription coupon code. Empty string removes the coupon before any payment."
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "example": {
+          "code": "WELCOME10"
+        }
+      },
+      "SubscriptionCoupon": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "couponId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32,
+            "description": "Case-insensitive letters, digits, underscores and hyphens. Stored uppercase; unique within your business, including archived codes."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.01,
+            "maximum": 1000000000,
+            "description": "Percentage: greater than zero, at most 100. Fixed: INR. Rounded to two decimals."
+          }
+        },
+        "required": [
+          "isActive",
+          "createdAt",
+          "updatedAt",
+          "couponId",
+          "name",
+          "code",
+          "type",
+          "value"
+        ],
+        "example": {
+          "isActive": true,
+          "createdAt": "2026-11-19T09:00:00Z",
+          "updatedAt": "2026-11-19T09:00:00Z",
+          "couponId": "SCP-000001",
+          "name": "Welcome discount",
+          "code": "WELCOME10",
+          "type": "percentage",
+          "value": 10
+        }
+      },
+      "SubscriptionCouponList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionCoupon"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "isActive": true,
+              "createdAt": "2026-11-19T09:00:00Z",
+              "updatedAt": "2026-11-19T09:00:00Z",
+              "couponId": "SCP-000001",
+              "name": "Welcome discount",
+              "code": "WELCOME10",
+              "type": "percentage",
+              "value": 10
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      },
+      "SubscriptionPaymentResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "payment": {
+            "$ref": "#/components/schemas/SubscriptionPayment"
+          },
+          "bill": {
+            "$ref": "#/components/schemas/SubscriptionBill"
+          },
+          "access": {
+            "$ref": "#/components/schemas/SubscriptionAccess"
+          }
+        },
+        "required": [
+          "payment",
+          "bill",
+          "access"
+        ],
+        "example": {
+          "payment": {
+            "paymentId": "SPR-000002",
+            "accountId": "ACC-000001",
+            "subscriptionId": "SUB-000001",
+            "billId": "SBI-000001",
+            "requestId": "manual-subscription-payment-001",
+            "amount": 250,
+            "method": "cash",
+            "reference": "",
+            "note": "Cash collected from the business owner",
+            "recordedBy": "USR-000001",
+            "createdAt": "2026-11-19T09:00:00Z"
+          },
+          "bill": {
+            "billId": "SBI-000001",
+            "accountId": "ACC-000001",
+            "subscriptionId": "SUB-000001",
+            "cycle": 1,
+            "plan": {
+              "isActive": true,
+              "createdAt": "2026-11-19T09:00:00Z",
+              "updatedAt": "2026-11-19T09:00:00Z",
+              "planId": "PLN-000001",
+              "name": "Starter",
+              "description": "For growing distributors",
+              "skuLimit": 100,
+              "warehouseLimit": 2,
+              "partnerLimit": 5,
+              "trialDays": 14,
+              "billingInterval": "monthly",
+              "price": 500,
+              "currency": "INR"
+            },
+            "subtotal": 500,
+            "discount": {
+              "couponId": "SCP-000001",
+              "code": "WELCOME10",
+              "name": "Welcome discount",
+              "type": "percentage",
+              "value": 10
+            },
+            "discountAmount": 50,
+            "total": 450,
+            "paidAmount": 450,
+            "status": "paid",
+            "createdAt": "2026-11-19T09:00:00Z",
+            "updatedAt": "2026-11-19T09:00:00Z",
+            "paidAt": "2026-11-19T09:00:00Z",
+            "periodStart": "2026-12-04T09:00:00Z",
+            "periodEnd": "2027-01-04T09:00:00Z"
+          },
+          "access": {
+            "status": "trialing",
+            "hasAccess": true,
+            "subscriptionId": "SUB-000001",
+            "plan": {
+              "isActive": true,
+              "createdAt": "2026-11-19T09:00:00Z",
+              "updatedAt": "2026-11-19T09:00:00Z",
+              "planId": "PLN-000001",
+              "name": "Starter",
+              "description": "For growing distributors",
+              "skuLimit": 100,
+              "warehouseLimit": 2,
+              "partnerLimit": 5,
+              "trialDays": 14,
+              "billingInterval": "monthly",
+              "price": 500,
+              "currency": "INR"
+            },
+            "trialEndsAt": "2026-12-04T09:00:00Z",
+            "periodStart": "2026-11-20T09:00:00Z",
+            "periodEnd": "2026-12-04T09:00:00Z",
+            "nextRenewalAt": "2026-12-04T09:00:00Z",
+            "autoRenew": true,
+            "paidUntil": "2027-01-04T09:00:00Z",
+            "billing": {
+              "subtotal": 500,
+              "discountAmount": 0,
+              "total": 500,
+              "paidAmount": 0,
+              "amountDue": 500
+            }
           }
         }
       },

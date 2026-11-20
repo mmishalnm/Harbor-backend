@@ -82,9 +82,10 @@ schema("LoginResult", {"accessToken": string, "tokenType": string, "expiresIn": 
 schema("SessionProfile", {"user": ref("User"), "account": ref("BusinessAccount")}, {"user": admin, "account": examples["BusinessAccount"]})
 
 plan_props = {"name": name, "description": text, "skuLimit": {"type":"integer","minimum":1,"maximum":1000000}, "warehouseLimit":{"type":"integer","minimum":1,"maximum":100000}, "partnerLimit":{"type":"integer","minimum":0,"maximum":100000}, "trialDays":{"type":"integer","minimum":0,"maximum":365}, "billingInterval":{"type":"string","enum":["monthly","yearly"]}}
-plan_input = {"name":"Starter","description":"For growing distributors","skuLimit":100,"warehouseLimit":2,"partnerLimit":5,"trialDays":14,"billingInterval":"monthly"}
+plan_props["price"] = {**amount, "description":"INR charge per monthly/yearly cycle; 0 is free. Omitted on create defaults to 0; omitted on edit preserves the existing charge. Accepted subscriptions retain their snapshotted price."}
+plan_input = {"name":"Starter","description":"For growing distributors","skuLimit":100,"warehouseLimit":2,"partnerLimit":5,"trialDays":14,"billingInterval":"monthly","price":500}
 schema("PlanInput",plan_props,plan_input,["name","skuLimit","warehouseLimit","partnerLimit","trialDays","billingInterval"])
-schema("Plan",{"planId":string,**plan_props,"price":{"type":"number","enum":[0]},"currency":{"type":"string","enum":["INR"]}},{"planId":"PLN-000001",**plan_input,"price":0,"currency":"INR"},entity=True)
+schema("Plan",{"planId":string,**plan_props,"price":amount,"currency":{"type":"string","enum":["INR"]}},{"planId":"PLN-000001",**plan_input,"price":500,"currency":"INR"},entity=True)
 plan = examples["Plan"]
 schema("PlanUsage",{"skus":{"type":"integer","minimum":0},"warehouses":{"type":"integer","minimum":0},"partners":{"type":"integer","minimum":0}},{"skus":2,"warehouses":1,"partners":1})
 access_example = {"status":"trialing","hasAccess":True,"subscriptionId":"SUB-000001","plan":plan,"trialEndsAt":"2026-12-04T09:00:00Z","periodStart":"2026-11-20T09:00:00Z","periodEnd":"2026-12-04T09:00:00Z","nextRenewalAt":"2026-12-04T09:00:00Z","autoRenew":True}
@@ -211,6 +212,21 @@ def page_params():
             {"in": "query", "name": "limit", "schema": {"type": "integer", "minimum": 1, "maximum": 200, "default": 20}}]
 
 
+# Platform billing is separate from tenant sales invoices, customer payments and GST.
+schema("SubscriptionQuote", {"billId":string,"subtotal":amount,"discount":ref("Discount"),"discountAmount":amount,"total":amount,"paidAmount":amount,"amountDue":amount}, {"billId":"SBI-000001","subtotal":500,"discount":{**examples["Discount"],"couponId":"SCP-000001","code":"WELCOME10","type":"percentage","value":10},"discountAmount":50,"total":450,"paidAmount":200,"amountDue":250}, ["subtotal","discountAmount","total","paidAmount","amountDue"])
+schema("SubscriptionBill", {"billId":string,"accountId":string,"subscriptionId":string,"cycle":{"type":"integer","minimum":1},"plan":ref("Plan"),"subtotal":amount,"discount":ref("Discount"),"discountAmount":amount,"total":amount,"paidAmount":amount,"status":{**string,"enum":["pending","paid"]},"createdAt":timestamp,"updatedAt":timestamp,"paidAt":timestamp,"periodStart":timestamp,"periodEnd":timestamp}, {"billId":"SBI-000001","accountId":"ACC-000001","subscriptionId":"SUB-000001","cycle":1,"plan":plan,"subtotal":500,"discount":examples["SubscriptionQuote"]["discount"],"discountAmount":50,"total":450,"paidAmount":200,"status":"pending","createdAt":stamp,"updatedAt":stamp}, ["billId","accountId","subscriptionId","cycle","plan","subtotal","discountAmount","total","paidAmount","status","createdAt","updatedAt"])
+schema("SubscriptionPaymentInput", {"billId":string,"requestId":{**string,"minLength":16,"maxLength":128,"description":"Unique idempotency key; retain the same body/key when retrying."},"amount":amount,"method":{**string,"enum":["cash","upi","bank","waiver"]},"reference":{**string,"maxLength":200},"note":{**text,"minLength":1}}, {"billId":"SBI-000001","requestId":"manual-subscription-payment-001","amount":250,"method":"cash","reference":"","note":"Cash collected from the business owner"}, ["billId","requestId","amount","method","note"])
+schema("SubscriptionPayment", {"paymentId":string,"accountId":string,"subscriptionId":string,**schemas["SubscriptionPaymentInput"]["properties"],"recordedBy":string,"createdAt":timestamp}, {"paymentId":"SPR-000002","accountId":"ACC-000001","subscriptionId":"SUB-000001",**examples["SubscriptionPaymentInput"],"recordedBy":"USR-000001","createdAt":stamp})
+schema("SubscriptionPaymentList", {"items":arr(ref("SubscriptionPayment")),**page_props}, {"items":[examples["SubscriptionPayment"]],"page":1,"limit":20,"total":1})
+schema("SubscriptionCouponInput", {"code":{**string,"maxLength":32,"description":"An active subscription coupon code. Empty string removes the coupon before any payment."}}, {"code":"WELCOME10"})
+schema("SubscriptionCoupon", schemas["Coupon"]["properties"], {**examples["Coupon"],"couponId":"SCP-000001"})
+schema("SubscriptionCouponList", {"items":arr(ref("SubscriptionCoupon")),**page_props}, {"items":[examples["SubscriptionCoupon"]],"page":1,"limit":20,"total":1})
+schemas["SubscriptionAccess"]["properties"].update({"paidUntil":timestamp,"billing":ref("SubscriptionQuote")})
+schemas["Subscription"]["properties"].update({"paidFrom":timestamp,"paidUntil":timestamp,"billingCycle":{"type":"integer","minimum":0},"currentBill":ref("SubscriptionBill")})
+paid_bill = {**examples["SubscriptionBill"],"paidAmount":450,"status":"paid","paidAt":stamp,"periodStart":"2026-12-04T09:00:00Z","periodEnd":"2027-01-04T09:00:00Z"}
+paid_access = {**access_example,"paidUntil":"2027-01-04T09:00:00Z","billing":{"subtotal":500,"discountAmount":0,"total":500,"paidAmount":0,"amountDue":500}}
+schema("SubscriptionPaymentResult", {"payment":ref("SubscriptionPayment"),"bill":ref("SubscriptionBill"),"access":ref("SubscriptionAccess")}, {"payment":examples["SubscriptionPayment"],"bill":paid_bill,"access":paid_access})
+
 def operation(method, path, summary, roles, response, request=None, status=200, example=None, description="", paginate=False):
     params = [{"in": "path", "name": part[1:-1], "required": True, "schema": string}
               for part in path.split("/") if part.startswith("{")]
@@ -296,16 +312,16 @@ for method,path,summary,response,request,status in [
     ("GET","/api/v1/platform/businesses","List tenant registration details","BusinessRegistrationList",None,200),
     ("PUT","/api/v1/platform/businesses/{id}/status","Deactivate or reactivate a tenant business","BusinessRegistration","BusinessStatusInput",200),
     ("GET","/api/v1/platform/plans","List subscription plans","PlanList",None,200),
-    ("POST","/api/v1/platform/plans","Create a free recurring plan","Plan","PlanInput",201),
+    ("POST","/api/v1/platform/plans","Create a recurring plan with an INR charge","Plan","PlanInput",201),
     ("PUT","/api/v1/platform/plans/{id}","Edit plan terms for new subscriptions","Plan","PlanInput",200),
     ("POST","/api/v1/platform/plans/{id}/archive","Archive a plan for new subscriptions","Archived",None,200),
 ]:
-    op=operation(method,path,summary,["superAdmin"],response,request,status=status,paginate=method=="GET",description=platform_description+" All plans are INR 0 for now. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving.")
+    op=operation(method,path,summary,["superAdmin"],response,request,status=status,paginate=method=="GET",description=platform_description+" Monthly/yearly charges are configured with price; 0 stays free. Plan IDs use the global atomic PLN- sequence. Existing accepted plan snapshots survive edits/archiving; tenants can explicitly select updated terms of the same plan.")
     op["x-account-isolation"]=False
     if method=="GET":op["parameters"].append({"in":"query","name":"isActive","schema":{"type":"boolean"}})
     if path.endswith('/status'):
         op["responses"]["200"]["content"]["application/json"]["example"]={**examples["BusinessRegistration"],"isActive":False,"statusReason":"Account review","subscription":{**access_example,"status":"businessInactive","hasAccess":False}}
-subscription_description = "Subscription is required before tenant operations. Owners choose an active global plan; staff cannot subscribe/cancel/resume. All plans are currently free. First-subscription trial is granted once per business; switching plans preserves remaining trial and never restarts it. Accepted limits/terms are snapshotted. Recurring free periods use the original Indian calendar billing day, clamped in short months, and are derived from the persisted anchor without a scheduler or fake payments. Cancel stops renewal at trial/current-period end; resume before expiry. Expired tenants must select a plan again. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants; a first variant uses the reserved product slot. Active variants still count if their parent is archived. Creating products/extra variants/warehouses/partners is serialized with plan changes and bounded by the plan; over-limit additions return PLAN_LIMIT_REACHED. Selecting a plan below current usage returns PLAN_BELOW_USAGE. Existing records are retained. Future nonzero-price subscriptions require a verified payment integration; no card/UPI charge is performed."
+subscription_description = "Subscription is required before tenant operations. Only tenant admin can select/cancel/resume; staff contact their business admin. Trials are granted once; switching preserves remaining trial, never restarts it. Accepted price, limits and renewal terms are snapshotted; edits and archives affect new subscriptions only. Free plans auto-renew without receipts. Paid plans require Harbor superadmin to record manual receipts each cycle. Trial/paid expiry blocks operations with SUBSCRIPTION_PAYMENT_REQUIRED until a bill is fully covered. Partial receipts do not activate access. Coupons apply to one bill only, including during trial, and never carry automatically into renewal. Zero net bills still require superadmin waiver approval. Cancel retains trial/prepaid coverage; no automatic charge occurs. Late payment starts a fresh period at approval; early payment extends trial/paid end. Indian calendar anchors preserve month-end/leap days. Switching plans does not transfer or refund payments; pending partial payments must be completed first. Usage is returned only to admin/manager. SKU usage counts active variants plus active products without active variants, and capacity is enforced transactionally with plan changes. Existing records are retained."
 for method,path,summary,roles,response,request in [
     ("GET","/api/v1/subscription","Read own subscription and capacity",ALL,"SubscriptionAccess",None),
     ("GET","/api/v1/subscription/plans","Choose from active subscription plans",["admin"],"PlanList",None),
@@ -316,6 +332,30 @@ for method,path,summary,roles,response,request in [
     op=operation(method,path,summary,roles,response,request,paginate=path.endswith('/plans'),description=subscription_description)
     if path=="/api/v1/subscription" and method=="GET":
         c=op["responses"]["200"]["content"]["application/json"];c.pop("example",None);c["examples"]={"trial":{"value":examples["SubscriptionAccess"]},"noPlan":{"value":{"status":"required","hasAccess":False,"autoRenew":False}},"active":{"value":{**examples["SubscriptionAccess"],"status":"active"}}}
+
+billing_description = "Harbor subscription billing only; does not read or change tenant customer ledgers, stock, sales invoices, or customer receipts. All monetary writes and audit events use WithTx. Bills snapshot accepted recurring fees and coupon discounts. Payment records are append-only and paid totals derive from receipts. Every list is paginated (limit <= 200), latest first. Account deactivation remains in force even when payment is recorded."
+for method,path,summary,response,request,status,paginate in [
+    ("GET","/api/v1/platform/businesses/{id}/subscription","Read subscription billing without tenant sales data","SubscriptionAccess",None,200,False),
+    ("POST","/api/v1/platform/businesses/{id}/subscription/bill","Prepare or reuse the current unpaid bill","SubscriptionBill",None,200,False),
+    ("POST","/api/v1/platform/businesses/{id}/subscription/payments","Record an actual subscription collection","SubscriptionPaymentResult","SubscriptionPaymentInput",201,False),
+    ("GET","/api/v1/platform/businesses/{id}/subscription/payments","List subscription receipts for this business","SubscriptionPaymentList",None,200,True),
+    ("GET","/api/v1/platform/subscription-coupons","List platform subscription coupons","SubscriptionCouponList",None,200,True),
+    ("POST","/api/v1/platform/subscription-coupons","Create percentage or fixed subscription coupon","SubscriptionCoupon","CouponInput",201,False),
+    ("PUT","/api/v1/platform/subscription-coupons/{id}","Edit subscription coupon for future applications","SubscriptionCoupon","CouponInput",200,False),
+    ("POST","/api/v1/platform/subscription-coupons/{id}/archive","Archive subscription coupon","Archived",None,200,False),
+]:
+    op=operation(method,path,summary,["superAdmin"],response,request,status=status,paginate=paginate,description=billing_description)
+    op["x-account-isolation"]=False
+    if method=="GET" and path.endswith("subscription-coupons"):op["parameters"].append({"in":"query","name":"isActive","schema":{"type":"boolean"}})
+    if method=="POST" and path.endswith("/payments"):
+        op["description"] += " Prepare a bill first. billId must match the current pending bill. Positive amount must not exceed outstanding balance. cash/upi/bank require actual receipt; UPI/bank require reference; note is always required. waiver with amount=0 is allowed only for a fully discounted bill. No other approval flag is accepted. Exact requestId/body replay returns the original receipt without extending access twice; changed payload returns IDEMPOTENCY_CONFLICT. Concurrent receipts are serialized per account. Full payment activates one monthly/yearly period; partial payments leave paid access blocked. No bank/card/UPI gateway call is performed."
+        c=op["responses"]["201"]["content"]["application/json"];c.pop("example",None);c["examples"]={"fullyPaid":{"value":examples["SubscriptionPaymentResult"]},"partial":{"value":{"payment":{**examples["SubscriptionPayment"],"amount":200},"bill":examples["SubscriptionBill"],"access":{**access_example,"status":"paymentRequired","hasAccess":False,"billing":examples["SubscriptionQuote"]}}}}
+        op["responses"]["409"]["content"]["application/json"].update({"example":{"error":{"code":"IDEMPOTENCY_CONFLICT","message":"This requestId was already used for different subscription payment details"}}})
+operation("GET","/api/v1/subscription/payments","Read own subscription receipts",["admin"],"SubscriptionPaymentList",paginate=True,description=billing_description+" Signed tenant only. Remains available while payment is required; tenant cannot record or approve subscription payments.")
+op=operation("POST","/api/v1/subscription/coupon","Apply or clear a coupon on the next subscription bill",["admin"],"SubscriptionAccess","SubscriptionCouponInput",description=billing_description+" Remains available while payment is required. Code is normalized uppercase; invalid/archived codes are rejected. Materializes the bill, applies percentage or fixed discount capped to fee, and saves a snapshot. Empty code clears it. After any partial payment, BILL_LOCKED prevents coupon changes. A 100% discount still requires Harbor superadmin waiver approval. Order coupons cannot be used here.")
+op["responses"]["200"]["content"]["application/json"]["example"]={**access_example,"billing":{**examples["SubscriptionQuote"],"paidAmount":0,"amountDue":450}}
+op["responses"]["409"]["content"]["application/json"]["example"]={"error":{"code":"BILL_LOCKED","message":"Coupons cannot be changed after a payment has been recorded"}}
+paths["/api/v1/subscription"]["get"]["responses"]["200"]["content"]["application/json"]["examples"]["paymentRequired"]={"value":{**access_example,"status":"paymentRequired","hasAccess":False,"billing":examples["SubscriptionQuote"]}}
 
 operation("GET", "/health", "Liveness", [], "Health")
 operation("POST", "/api/v1/auth/login", "Log in; paste accessToken into Authorize", [], "LoginResult", "LoginInput")
@@ -483,7 +523,7 @@ for path,methods in paths.items():
     for method,op in methods.items():
         roles=op.get("x-roles",[])
         if roles and not path.startswith("/api/v1/platform/") and path != "/api/v1/auth/me" and not (path == "/api/v1/account" and method == "get") and not path.startswith("/api/v1/subscription"):
-            op["responses"]["402"]={"description":"Subscription required or expired","content":{"application/json":{"schema":ref("Error"),"examples":{"required":{"value":{"error":{"code":"SUBSCRIPTION_REQUIRED","message":"Choose a subscription plan to use this business"}}},"expired":{"value":{"error":{"code":"SUBSCRIPTION_EXPIRED","message":"Your subscription has ended. Choose a plan to continue"}}}}}}}
+            op["responses"]["402"]={"description":"Subscription required, expired, or payment needed","content":{"application/json":{"schema":ref("Error"),"examples":{"required":{"value":{"error":{"code":"SUBSCRIPTION_REQUIRED","message":"Choose a subscription plan to use this business"}}},"expired":{"value":{"error":{"code":"SUBSCRIPTION_EXPIRED","message":"Your subscription has ended. Choose a plan to continue"}}},"paymentRequired":{"value":{"error":{"code":"SUBSCRIPTION_PAYMENT_REQUIRED","message":"Your trial or paid subscription period has ended. Contact Harbor to pay; access resumes after payment approval"}}}}}}}
         if roles and roles != ["superAdmin"]:
             op["responses"]["403"]["content"]["application/json"]["examples"]={"role":{"value":{"error":{"code":"FORBIDDEN","message":"You do not have access to this operation"}}},"inactive":{"value":{"error":{"code":"BUSINESS_INACTIVE","message":"This business is deactivated. Contact Harbor support"}}}}
             op["responses"]["403"]["content"]["application/json"].pop("example",None)
@@ -493,6 +533,6 @@ for path,methods in paths.items():
 for path in ["/api/v1/subscription"]:
     paths[path]["post"]["responses"]["409"]["content"]["application/json"]["example"]={"error":{"code":"PLAN_BELOW_USAGE","message":"Choose a plan that covers your current SKUs, warehouses and delivery partners"}}
 
-spec = {"openapi": "3.0.3", "info": {"title": "Harbor by Code Wayne", "version": "1.13.0", "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."}, "servers": [{"url": "/"}], "paths": paths, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "schemas": schemas}}
+spec = {"openapi": "3.0.3", "info": {"title": "Harbor by Code Wayne", "version": "1.14.0", "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."}, "servers": [{"url": "/"}], "paths": paths, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "schemas": schemas}}
 (ROOT / "internal/docs/openapi.yaml").write_text(json.dumps(spec, indent=2) + "\n")
 print(f"Wrote {sum(len(v) for v in paths.values())} operations and {len(schemas)} schemas")

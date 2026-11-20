@@ -10,6 +10,7 @@ func subscriptionExempt(path string) bool {
 	return path == "/api/v1/auth/me" || path == "/api/v1/account" || strings.HasPrefix(path, "/api/v1/subscription") || strings.HasPrefix(path, "/api/v1/platform/")
 }
 func (s *Server) registerSubscriptions() {
+	s.registerSubscriptionBilling()
 	platform := []string{store.SuperAdmin}
 	s.add("GET", "/api/v1/platform/businesses", platform, 200, func(a store.Actor, r *http.Request) (any, error) {
 		p, err := pagination(r)
