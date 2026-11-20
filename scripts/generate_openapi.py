@@ -91,10 +91,19 @@ availability_props = {"onHandQuantity": stock_quantity, "reservedQuantity": stoc
 availability_example = {"onHandQuantity": 225, "reservedQuantity": 13, "availableQuantity": 212, "awaitingStockQuantity": 0}
 schema("AvailabilityTotals", availability_props, availability_example)
 schema("Availability", {"variantId": string, **availability_props}, {"variantId": "MVN-000001", **availability_example})
+discount_type = {"type": "string", "enum": ["percentage", "fixed"]}
+schema("DiscountInput", {"type": discount_type, "value": {**amount, "minimum": 0.01}, "reason": {**text, "minLength": 1}}, {"type": "fixed", "value": 100, "reason": "Customer loyalty"})
+schema("Discount", {"couponId": string, "code": string, "name": name, "type": discount_type, "value": amount, "reason": text}, {"couponId": "CPN-000001", "code": "WELCOME10", "name": "Welcome discount", "type": "percentage", "value": 10}, ["type", "value"])
+schema("CouponInput", {"name": name, "code": {**string, "minLength": 2, "maxLength": 32, "description": "Case-insensitive letters, digits, underscores and hyphens. Stored uppercase; unique within your business, including archived codes."}, "type": discount_type, "value": {**amount, "minimum": 0.01, "description": "Percentage: greater than zero, at most 100. Fixed: INR. Rounded to two decimals."}}, {"name": "Welcome discount", "code": "WELCOME10", "type": "percentage", "value": 10})
+schema("Coupon", {"couponId": string, **schemas["CouponInput"]["properties"]}, {"couponId": "CPN-000001", **examples["CouponInput"]}, entity=True)
+schema("CouponList", {"items": arr(ref("Coupon")), "page": {"type": "integer"}, "limit": {"type": "integer"}, "total": {"type": "integer"}}, {"items": [examples["Coupon"]], "page": 1, "limit": 20, "total": 1})
 schema("OrderInput", {"tripId": {**string, "description": "Optional explicit planned/started trip. Riders can choose only their own trip; overrides automatic trip selection."}, "customerId": string, "source": {"type": "string", "enum": ["counter", "salesStaff", "store", "phone", "pickup", "deliveryPartner"]}, "items": {**items, "minItems": 1}}, {"customerId": "CUS-000001", "source": "phone", "items": [{"variantId": "MVN-000001", "quantity": 20}, {"variantId": "MVN-000002", "quantity": 5}]})
+schemas["OrderInput"]["properties"].update({"couponId": {**string, "description": "Optional active business coupon. Mutually exclusive with discount."}, "discount": {**ref("DiscountInput"), "description": "Admin/manager only. Manual discount requires a reason. Cannot combine with a coupon."}})
 schemas["OrderInput"]["required"] = ["customerId", "items"]
 schemas["OrderInput"]["properties"]["source"]["description"] = "Delivery partners may omit source (defaults to deliveryPartner). Other roles must supply it."
 schema("Order", {"orderId": string, **schemas["OrderInput"]["properties"], "picked": items, "reservedItems": items, "awaitingStockItems": items, "cancelReason": text, "cancelledBy": string, "cancelledAt": timestamp, "tripId": string, "status": string, "createdBy": string}, {"orderId": "ORD-000001", **examples["OrderInput"], "picked": [], "reservedItems": examples["OrderInput"]["items"], "awaitingStockItems": [], "status": "open", "createdBy": "USR-000001"}, [*base, "orderId", "customerId", "source", "items", "picked", "status", "createdBy"], entity=True)
+schemas["Order"]["properties"].pop("couponId", None)
+schemas["Order"]["properties"]["discount"] = ref("Discount")
 schema("AssignOrderInput", {"tripId": {**string, "description": "Optional explicit trip instead of automatic trip selection."}, "deliveryPartnerId": string, "vehicleId": {**string, "description": "Optional specific vehicle. Otherwise reuse the partner's current trip, or create a trip using their default vehicle."}}, {"deliveryPartnerId": "USR-000003", "vehicleId": "VEH-000001"}, [])
 schemas["AssignOrderInput"]["anyOf"] = [{"required": ["tripId"]}, {"required": ["deliveryPartnerId"]}]
 schema("Stop", {"orderId": string, "status": {"type": "string", "enum": ["pending", "delivered", "partiallyDelivered", "failed"]}, "delivered": items, "invoiceId": string, "reason": text, "closedAt": timestamp}, {"orderId": "ORD-000001", "status": "pending", "delivered": []}, ["orderId", "status", "delivered"])
@@ -109,10 +118,10 @@ schema("PickupResult", {"tripId": string, "order": ref("Order"), "movements": ar
 method = {"type": "string", "enum": ["cash", "upi", "bank"]}
 delivered = [{"variantId": "MVN-000001", "quantity": 18}, {"variantId": "MVN-000002", "quantity": 5}]
 schema("CloseStopInput", {"delivered": items, "reason": text, "collectedAmount": amount, "paymentMethod": method}, {"delivered": delivered, "reason": "Two bags not accepted", "collectedAmount": 3500, "paymentMethod": "cash"}, ["delivered"])
-line_props = {"variantId": string, "name": string, "quantity": quantity, "unitPrice": amount, "amount": amount}
-schema("InvoiceLine", line_props, {"variantId": "MVN-000001", "name": "5kg", "quantity": 18, "unitPrice": 120, "amount": 2160})
-invoice = {"invoiceId": "INV-000001", "invoiceNo": "INV/26-27/00001", "customerId": "CUS-000001", "orderId": "ORD-000001", "tripId": "TRP-000001", "lines": [examples["InvoiceLine"], {"variantId": "MVN-000002", "name": "2.5kg", "quantity": 5, "unitPrice": 65, "amount": 325}], "total": 2485, "status": "issued", "createdBy": "USR-000003"}
-schema("Invoice", {"invoiceId": string, "invoiceNo": {"type": "string", "maxLength": 16, "pattern": "^INV/[0-9]{2}-[0-9]{2}/[0-9]{5}$"}, "customerId": string, "orderId": string, "tripId": string, "lines": arr(ref("InvoiceLine")), "total": amount, "status": {"type": "string", "enum": ["issued", "cancelled"]}, "cancelReason": text, "createdBy": string}, invoice, [*base, *invoice], entity=True)
+line_props = {"variantId": string, "name": string, "quantity": quantity, "unitPrice": amount, "subtotal": amount, "discountAmount": amount, "amount": {**amount, "description": "Net line amount after its allocated share of the order discount."}}
+schema("InvoiceLine", line_props, {"variantId": "MVN-000001", "name": "5kg", "quantity": 18, "unitPrice": 120, "subtotal": 2160, "discountAmount": 0, "amount": 2160})
+invoice = {"invoiceId": "INV-000001", "invoiceNo": "INV/26-27/00001", "customerId": "CUS-000001", "orderId": "ORD-000001", "tripId": "TRP-000001", "lines": [examples["InvoiceLine"], {"variantId": "MVN-000002", "name": "2.5kg", "quantity": 5, "unitPrice": 65, "subtotal": 325, "discountAmount": 0, "amount": 325}], "subtotal": 2485, "discountAmount": 0, "total": 2485, "status": "issued", "createdBy": "USR-000003"}
+schema("Invoice", {"invoiceId": string, "invoiceNo": {"type": "string", "maxLength": 16, "pattern": "^INV/[0-9]{2}-[0-9]{2}/[0-9]{5}$"}, "customerId": string, "orderId": string, "tripId": string, "lines": arr(ref("InvoiceLine")), "subtotal": amount, "discountAmount": amount, "discount": ref("Discount"), "total": {**amount, "description": "Net payable amount. Subtotal minus discountAmount; sums net line amounts."}, "status": {"type": "string", "enum": ["issued", "cancelled"]}, "cancelReason": text, "createdBy": string}, invoice, [*base, *invoice], entity=True)
 schema("PaymentInput", {"customerId": string, "tripId": string, "amount": {**amount, "minimum": 0.01}, "method": method}, {"customerId": "CUS-000001", "tripId": "TRP-000001", "amount": 3500, "method": "cash"}, ["customerId", "amount", "method"])
 payment = {"paymentId": "PAY-000001", "customerId": "CUS-000001", "tripId": "TRP-000001", "amount": 3500, "method": "cash", "receivedBy": "USR-000003", "createdAt": stamp}
 schema("Payment", {"paymentId": string, **schemas["PaymentInput"]["properties"], "receivedBy": string, "createdAt": timestamp}, payment, ["paymentId", "customerId", "amount", "method", "receivedBy", "createdAt"])
@@ -226,6 +235,19 @@ empty_sales["products"].update({"items": [], "total": 0})
 empty_sales["trend"]["items"] = [{"date": "2026-11-20", "salesAmount": 0, "unitsSold": 0, "invoiceCount": 0}]
 op["responses"]["200"]["content"]["application/json"].pop("example", None)
 op["responses"]["200"]["content"]["application/json"]["examples"] = {"allProducts": {"value": examples["SalesAnalytics"]}, "productFilter": {"value": filtered_sales}, "noSales": {"value": empty_sales}}
+
+for method, path, summary, response, request, status, roles in [
+    ("POST", "/api/v1/coupons", "Create a coupon", "Coupon", "CouponInput", 201, A),
+    ("PUT", "/api/v1/coupons/{id}", "Edit a coupon for future orders", "Coupon", "CouponInput", 200, A),
+    ("GET", "/api/v1/coupons", "List business coupons", "CouponList", None, 200, A),
+    ("GET", "/api/v1/coupons/options", "Choose an active coupon for an order", "CouponList", None, 200, ALL),
+    ("POST", "/api/v1/coupons/{id}/archive", "Archive a coupon", "Archived", None, 200, A),
+]:
+    op = operation(method, path, summary, roles, response, request, status=status, paginate=method=="GET", description="Signed-business scope. Coupon IDs use the atomic CPN- series. Admins/managers manage coupons; all order creators may choose active coupons. Existing order discount snapshots are unaffected by edits or archiving. Archived coupon codes stay reserved. No stacking. Percentage 0 < value <= 100; fixed INR > 0. Two-decimal rounding.")
+    if path == "/api/v1/coupons" and method == "GET":
+        op["parameters"].append({"in": "query", "name": "isActive", "schema": {"type": "boolean"}})
+    if method in ["POST", "PUT"] and request:
+        op["responses"]["409"]["content"]["application/json"]["example"] = {"error": {"code": "COUPON_CODE_EXISTS", "message": "This coupon code already exists in your business"}}
 
 operation("GET", "/health", "Liveness", [], "Health")
 operation("POST", "/api/v1/auth/login", "Log in; paste accessToken into Authorize", [], "LoginResult", "LoginInput")
@@ -354,6 +376,23 @@ for route in ["/api/v1/customers/{id}/ledger", "/api/v1/trips/{id}/customers/{cu
         *[{"in": "query", "name": key, "schema": {**string, "format": "date"}, "description": "Inclusive Indian calendar date"} for key in ["dateFrom", "dateTo"]],
     ]
 
-spec = {"openapi": "3.0.3", "info": {"title": "Harbor by Code Wayne", "version": "1.10.0", "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."}, "servers": [{"url": "/"}], "paths": paths, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "schemas": schemas}}
+discount_description = " Optional couponId OR manual discount, never both. Admin/manager manual discounts require a reason; staff/riders can apply only active pre-approved coupons. Terms are snapshotted on order creation. Fixed discounts cannot exceed the current order subtotal. Delivery retains current variant prices: percentage applies to delivered subtotal; fixed discount is prorated by delivered subtotal / full-order subtotal at those same delivery-time prices, capped to prevent a negative invoice. Undelivered goods receive no discount or invoice. Proportional line allocation uses largest remainders so cents sum exactly. Payments, ledger, advance and sales analytics use net totals."
+paths["/api/v1/orders"]["post"]["description"] += discount_description
+paths["/api/v1/trips/{id}/pickup"]["post"]["description"] += " Embedded order creation supports the same coupon/manual discount rules."
+paths["/api/v1/trips/{id}/stops/{orderId}/close"]["post"]["description"] += discount_description
+paths["/api/v1/analytics/sales"]["get"]["description"] += " Sales and average prices are net of invoice discounts; collection amounts remain actual receipts."
+discounted_invoice = copy.deepcopy(examples["Invoice"])
+discounted_invoice.update({"subtotal": 2485, "discountAmount": 248.5, "total": 2236.5, "discount": examples["Discount"]})
+for line in discounted_invoice["lines"]:
+    line["discountAmount"] = round(line["subtotal"] * 0.1, 2)
+    line["amount"] = round(line["subtotal"] - line["discountAmount"], 2)
+invoice_response = paths["/api/v1/invoices/{id}"]["get"]["responses"]["200"]["content"]["application/json"]
+invoice_response.pop("example",None)
+invoice_response["examples"] = {"standard": {"value": examples["Invoice"]}, "percentageCoupon": {"value": discounted_invoice}}
+order_request = paths["/api/v1/orders"]["post"]["requestBody"]["content"]["application/json"]
+order_request.pop("example", None)
+order_request["examples"] = {"standard": {"value": examples["OrderInput"]}, "coupon": {"value": {**examples["OrderInput"], "couponId": "CPN-000001"}}, "manualFixed": {"value": {**examples["OrderInput"], "discount": examples["DiscountInput"]}}, "manualPercentage": {"value": {**examples["OrderInput"], "discount": {"type": "percentage", "value": 10, "reason": "Loyal customer"}}}}
+
+spec = {"openapi": "3.0.3", "info": {"title": "Harbor by Code Wayne", "version": "1.11.0", "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."}, "servers": [{"url": "/"}], "paths": paths, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "schemas": schemas}}
 (ROOT / "internal/docs/openapi.yaml").write_text(json.dumps(spec, indent=2) + "\n")
 print(f"Wrote {sum(len(v) for v in paths.values())} operations and {len(schemas)} schemas")

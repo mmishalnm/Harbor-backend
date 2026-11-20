@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Harbor by Code Wayne",
-    "version": "1.10.0",
+    "version": "1.11.0",
     "description": "Business account isolation is enforced from the signed JWT accountId on every protected operation. Do not send a tenant selector. Staff see all storage locations when their location assignment is empty, otherwise assigned locations; trips remain assignment-scoped; riders see their own trips. Warehouse, inventory and delivery backend. Quantities are whole units. Currency is INR; amounts round to two decimals. All stock and money changes are transactional. See README.md for the acceptance walkthrough, including the required 2.5kg stock receipt."
   },
   "servers": [
@@ -22,7 +22,7 @@
           "admin",
           "manager"
         ],
-        "description": "Admin/manager only, signed business scope. Read-only, single transaction snapshot. Sales use issued invoice creation dates and saved line amounts, never current variant prices, order quantities or pickup stock. Cancelled invoices are excluded; archived products, variants and customers remain in historical results. Product/variant filters count only matching invoice lines; invoiceCount/customerCount are distinct within the matching set, and averageInvoiceValue is matching sales divided by matching invoices. Collections are receipts dated within the period/customer, independent of invoice dates or payment allocation; they are omitted (null) when filtering a product/variant because receipts cannot be attributed to product lines. Filters apply before every total and pagination. Both date boundaries are inclusive Indian calendar dates. With no dates, defaults to this month through today in IST; dateTo alone uses the first day of that month, dateFrom alone uses today. Maximum 366 days. Variant must belong to selected product; foreign/missing references return NOT_FOUND. Products are ranked by sales descending then variantId, and trends are chronological with zero-sales periods included. Product rows and trend rows paginate independently; page/limit apply to products, trendPage/trendLimit to trend. Daily buckets use YYYY-MM-DD; monthly buckets use the first day of the month and partial boundary months contain only the selected dates. No stock or money is changed.",
+        "description": "Admin/manager only, signed business scope. Read-only, single transaction snapshot. Sales use issued invoice creation dates and saved line amounts, never current variant prices, order quantities or pickup stock. Cancelled invoices are excluded; archived products, variants and customers remain in historical results. Product/variant filters count only matching invoice lines; invoiceCount/customerCount are distinct within the matching set, and averageInvoiceValue is matching sales divided by matching invoices. Collections are receipts dated within the period/customer, independent of invoice dates or payment allocation; they are omitted (null) when filtering a product/variant because receipts cannot be attributed to product lines. Filters apply before every total and pagination. Both date boundaries are inclusive Indian calendar dates. With no dates, defaults to this month through today in IST; dateTo alone uses the first day of that month, dateFrom alone uses today. Maximum 366 days. Variant must belong to selected product; foreign/missing references return NOT_FOUND. Products are ranked by sales descending then variantId, and trends are chronological with zero-sales periods included. Product rows and trend rows paginate independently; page/limit apply to products, trendPage/trendLimit to trend. Daily buckets use YYYY-MM-DD; monthly buckets use the first day of the month and partial boundary months contain only the selected dates. No stock or money is changed. Sales and average prices are net of invoice discounts; collection amounts remain actual receipts.",
         "security": [
           {
             "bearerAuth": []
@@ -371,6 +371,841 @@
                   "error": {
                     "code": "NOT_FOUND",
                     "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coupons": {
+      "post": {
+        "summary": "Create a coupon",
+        "operationId": "POST_api_v1_coupons",
+        "tags": [
+          "coupons"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Signed-business scope. Coupon IDs use the atomic CPN- series. Admins/managers manage coupons; all order creators may choose active coupons. Existing order discount snapshots are unaffected by edits or archiving. Archived coupon codes stay reserved. No stacking. Percentage 0 < value <= 100; fixed INR > 0. Two-decimal rounding.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Coupon"
+                },
+                "example": {
+                  "isActive": true,
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z",
+                  "couponId": "CPN-000001",
+                  "name": "Welcome discount",
+                  "code": "WELCOME10",
+                  "type": "percentage",
+                  "value": 10
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "COUPON_CODE_EXISTS",
+                    "message": "This coupon code already exists in your business"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponInput"
+              },
+              "example": {
+                "name": "Welcome discount",
+                "code": "WELCOME10",
+                "type": "percentage",
+                "value": 10
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List business coupons",
+        "operationId": "GET_api_v1_coupons",
+        "tags": [
+          "coupons"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Signed-business scope. Coupon IDs use the atomic CPN- series. Admins/managers manage coupons; all order creators may choose active coupons. Existing order discount snapshots are unaffected by edits or archiving. Archived coupon codes stay reserved. No stacking. Percentage 0 < value <= 100; fixed INR > 0. Two-decimal rounding.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "isActive",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "couponId": "CPN-000001",
+                      "name": "Welcome discount",
+                      "code": "WELCOME10",
+                      "type": "percentage",
+                      "value": 10
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coupons/{id}": {
+      "put": {
+        "summary": "Edit a coupon for future orders",
+        "operationId": "PUT_api_v1_coupons_id",
+        "tags": [
+          "coupons"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Signed-business scope. Coupon IDs use the atomic CPN- series. Admins/managers manage coupons; all order creators may choose active coupons. Existing order discount snapshots are unaffected by edits or archiving. Archived coupon codes stay reserved. No stacking. Percentage 0 < value <= 100; fixed INR > 0. Two-decimal rounding.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Coupon"
+                },
+                "example": {
+                  "isActive": true,
+                  "createdAt": "2026-11-19T09:00:00Z",
+                  "updatedAt": "2026-11-19T09:00:00Z",
+                  "couponId": "CPN-000001",
+                  "name": "Welcome discount",
+                  "code": "WELCOME10",
+                  "type": "percentage",
+                  "value": 10
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "COUPON_CODE_EXISTS",
+                    "message": "This coupon code already exists in your business"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNSUPPORTED_MEDIA_TYPE",
+                    "message": "Content-Type must be application/json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponInput"
+              },
+              "example": {
+                "name": "Welcome discount",
+                "code": "WELCOME10",
+                "type": "percentage",
+                "value": 10
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coupons/options": {
+      "get": {
+        "summary": "Choose an active coupon for an order",
+        "operationId": "GET_api_v1_coupons_options",
+        "tags": [
+          "coupons"
+        ],
+        "x-roles": [
+          "admin",
+          "manager",
+          "warehouseStaff",
+          "deliveryPartner"
+        ],
+        "description": "Signed-business scope. Coupon IDs use the atomic CPN- series. Admins/managers manage coupons; all order creators may choose active coupons. Existing order discount snapshots are unaffected by edits or archiving. Archived coupon codes stay reserved. No stacking. Percentage 0 < value <= 100; fixed INR > 0. Two-decimal rounding.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "couponId": "CPN-000001",
+                      "name": "Welcome discount",
+                      "code": "WELCOME10",
+                      "type": "percentage",
+                      "value": 10
+                    }
+                  ],
+                  "page": 1,
+                  "limit": 20,
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coupons/{id}/archive": {
+      "post": {
+        "summary": "Archive a coupon",
+        "operationId": "POST_api_v1_coupons_id_archive",
+        "tags": [
+          "coupons"
+        ],
+        "x-roles": [
+          "admin",
+          "manager"
+        ],
+        "description": "Signed-business scope. Coupon IDs use the atomic CPN- series. Admins/managers manage coupons; all order creators may choose active coupons. Existing order discount snapshots are unaffected by edits or archiving. Archived coupon codes stay reserved. No stacking. Percentage 0 < value <= 100; fixed INR > 0. Two-decimal rounding.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-account-isolation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Archived"
+                },
+                "example": {
+                  "isActive": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request input is invalid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer authentication is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Bearer authentication is required"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "You do not have access to this operation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Resource not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Source location has insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INSUFFICIENT_STOCK",
+                    "message": "Source location has insufficient stock"
                   }
                 }
               }
@@ -5330,7 +6165,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Riders can create orders for customers in their own business. With autoAssignDeliveryPartnerOrders enabled, atomically add a pending stop to their current-window trip, or create a planned trip for today with the assigned vehicle. Started trips are preferred; remaining ties use earliest start/creation/ID. Missing vehicle or a full current trip fails the whole request without creating an orphan order. With the setting disabled, orders remain open. Creating an order never moves physical stock. Unpicked open/assigned quantities reserve storage stock oldest order first. With 225 on hand and an order of 13, reserved is 13 and available is 212. Orders exceeding storage stock remain allowed, with awaitingStockItems until stock arrives. Optional tripId chooses a specific own trip instead of automatic assignment. Existing orders participate immediately; no migration is needed.",
+        "description": "Riders can create orders for customers in their own business. With autoAssignDeliveryPartnerOrders enabled, atomically add a pending stop to their current-window trip, or create a planned trip for today with the assigned vehicle. Started trips are preferred; remaining ties use earliest start/creation/ID. Missing vehicle or a full current trip fails the whole request without creating an orphan order. With the setting disabled, orders remain open. Creating an order never moves physical stock. Unpicked open/assigned quantities reserve storage stock oldest order first. With 225 on hand and an order of 13, reserved is 13 and available is 212. Orders exceeding storage stock remain allowed, with awaitingStockItems until stock arrives. Optional tripId chooses a specific own trip instead of automatic assignment. Existing orders participate immediately; no migration is needed. Optional couponId OR manual discount, never both. Admin/manager manual discounts require a reason; staff/riders can apply only active pre-approved coupons. Terms are snapshotted on order creation. Fixed discounts cannot exceed the current order subtotal. Delivery retains current variant prices: percentage applies to delivered subtotal; fixed discount is prorated by delivered subtotal / full-order subtotal at those same delivery-time prices, capped to prevent a negative invoice. Undelivered goods receive no discount or invoice. Proportional line allocation uses largest remainders so cents sum exactly. Payments, ledger, advance and sales analytics use net totals.",
         "security": [
           {
             "bearerAuth": []
@@ -5540,19 +6375,82 @@
               "schema": {
                 "$ref": "#/components/schemas/OrderInput"
               },
-              "example": {
-                "customerId": "CUS-000001",
-                "source": "phone",
-                "items": [
-                  {
-                    "variantId": "MVN-000001",
-                    "quantity": 20
-                  },
-                  {
-                    "variantId": "MVN-000002",
-                    "quantity": 5
+              "examples": {
+                "standard": {
+                  "value": {
+                    "customerId": "CUS-000001",
+                    "source": "phone",
+                    "items": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 20
+                      },
+                      {
+                        "variantId": "MVN-000002",
+                        "quantity": 5
+                      }
+                    ]
                   }
-                ]
+                },
+                "coupon": {
+                  "value": {
+                    "customerId": "CUS-000001",
+                    "source": "phone",
+                    "items": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 20
+                      },
+                      {
+                        "variantId": "MVN-000002",
+                        "quantity": 5
+                      }
+                    ],
+                    "couponId": "CPN-000001"
+                  }
+                },
+                "manualFixed": {
+                  "value": {
+                    "customerId": "CUS-000001",
+                    "source": "phone",
+                    "items": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 20
+                      },
+                      {
+                        "variantId": "MVN-000002",
+                        "quantity": 5
+                      }
+                    ],
+                    "discount": {
+                      "type": "fixed",
+                      "value": 100,
+                      "reason": "Customer loyalty"
+                    }
+                  }
+                },
+                "manualPercentage": {
+                  "value": {
+                    "customerId": "CUS-000001",
+                    "source": "phone",
+                    "items": [
+                      {
+                        "variantId": "MVN-000001",
+                        "quantity": 20
+                      },
+                      {
+                        "variantId": "MVN-000002",
+                        "quantity": 5
+                      }
+                    ],
+                    "discount": {
+                      "type": "percentage",
+                      "value": 10,
+                      "reason": "Loyal customer"
+                    }
+                  }
+                }
               }
             }
           }
@@ -6652,6 +7550,8 @@
                           "name": "5kg",
                           "quantity": 18,
                           "unitPrice": 120,
+                          "subtotal": 2160,
+                          "discountAmount": 0,
                           "amount": 2160
                         },
                         {
@@ -6659,9 +7559,13 @@
                           "name": "2.5kg",
                           "quantity": 5,
                           "unitPrice": 65,
+                          "subtotal": 325,
+                          "discountAmount": 0,
                           "amount": 325
                         }
                       ],
+                      "subtotal": 2485,
+                      "discountAmount": 0,
                       "total": 2485,
                       "status": "issued",
                       "createdBy": "USR-000003"
@@ -10871,7 +11775,7 @@
           "warehouseStaff",
           "deliveryPartner"
         ],
-        "description": "Planned or started trip only. Provide either orderId or a new order. Late orders can be picked after departure; goods still move from an authorized storage location into the van. Warehouse staff must be assigned to the trip. Staff/partners with no assigned locations can pick up from any active storage location in their business. With one or more assignments they can pick up only from those locations (LOCATION_NOT_ASSIGNED otherwise). Admin/manager may use any active storage location in their business. Missing/inactive/foreign locations remain unavailable. Pickup atomically consumes this order\u2019s oldest-first reservation and claims exclusive vehicle use. It cannot consume stock reserved for older orders. Another loaded trip on this van returns VEHICLE_BUSY; unused planned trips may share a van. Partners may access only their own trip.",
+        "description": "Planned or started trip only. Provide either orderId or a new order. Late orders can be picked after departure; goods still move from an authorized storage location into the van. Warehouse staff must be assigned to the trip. Staff/partners with no assigned locations can pick up from any active storage location in their business. With one or more assignments they can pick up only from those locations (LOCATION_NOT_ASSIGNED otherwise). Admin/manager may use any active storage location in their business. Missing/inactive/foreign locations remain unavailable. Pickup atomically consumes this order\u2019s oldest-first reservation and claims exclusive vehicle use. It cannot consume stock reserved for older orders. Another loaded trip on this van returns VEHICLE_BUSY; unused planned trips may share a van. Partners may access only their own trip. Embedded order creation supports the same coupon/manual discount rules.",
         "security": [
           {
             "bearerAuth": []
@@ -11308,7 +12212,7 @@
           "manager",
           "deliveryPartner"
         ],
-        "description": "Close once. Empty delivered array means failure. Partial/failed delivery requires reason. Variant prices are read at delivery. Existing advance is allocated first, then payments oldest invoice first. Late orders with delivered quantities must be fully picked first (ORDER_NOT_FULLY_PICKED otherwise); empty failed deliveries remain possible. Leftovers stay on van until returned. Partners own trips only.",
+        "description": "Close once. Empty delivered array means failure. Partial/failed delivery requires reason. Variant prices are read at delivery. Existing advance is allocated first, then payments oldest invoice first. Late orders with delivered quantities must be fully picked first (ORDER_NOT_FULLY_PICKED otherwise); empty failed deliveries remain possible. Leftovers stay on van until returned. Partners own trips only. Optional couponId OR manual discount, never both. Admin/manager manual discounts require a reason; staff/riders can apply only active pre-approved coupons. Terms are snapshotted on order creation. Fixed discounts cannot exceed the current order subtotal. Delivery retains current variant prices: percentage applies to delivered subtotal; fixed discount is prorated by delivered subtotal / full-order subtotal at those same delivery-time prices, capped to prevent a negative invoice. Undelivered goods receive no discount or invoice. Proportional line allocation uses largest remainders so cents sum exactly. Payments, ledger, advance and sales analytics use net totals.",
         "security": [
           {
             "bearerAuth": []
@@ -11376,6 +12280,8 @@
                         "name": "5kg",
                         "quantity": 18,
                         "unitPrice": 120,
+                        "subtotal": 2160,
+                        "discountAmount": 0,
                         "amount": 2160
                       },
                       {
@@ -11383,9 +12289,13 @@
                         "name": "2.5kg",
                         "quantity": 5,
                         "unitPrice": 65,
+                        "subtotal": 325,
+                        "discountAmount": 0,
                         "amount": 325
                       }
                     ],
+                    "subtotal": 2485,
+                    "discountAmount": 0,
                     "total": 2485,
                     "status": "issued",
                     "createdBy": "USR-000003"
@@ -13018,34 +13928,88 @@
                 "schema": {
                   "$ref": "#/components/schemas/Invoice"
                 },
-                "example": {
-                  "isActive": true,
-                  "createdAt": "2026-11-19T09:00:00Z",
-                  "updatedAt": "2026-11-19T09:00:00Z",
-                  "invoiceId": "INV-000001",
-                  "invoiceNo": "INV/26-27/00001",
-                  "customerId": "CUS-000001",
-                  "orderId": "ORD-000001",
-                  "tripId": "TRP-000001",
-                  "lines": [
-                    {
-                      "variantId": "MVN-000001",
-                      "name": "5kg",
-                      "quantity": 18,
-                      "unitPrice": 120,
-                      "amount": 2160
-                    },
-                    {
-                      "variantId": "MVN-000002",
-                      "name": "2.5kg",
-                      "quantity": 5,
-                      "unitPrice": 65,
-                      "amount": 325
+                "examples": {
+                  "standard": {
+                    "value": {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "invoiceId": "INV-000001",
+                      "invoiceNo": "INV/26-27/00001",
+                      "customerId": "CUS-000001",
+                      "orderId": "ORD-000001",
+                      "tripId": "TRP-000001",
+                      "lines": [
+                        {
+                          "variantId": "MVN-000001",
+                          "name": "5kg",
+                          "quantity": 18,
+                          "unitPrice": 120,
+                          "subtotal": 2160,
+                          "discountAmount": 0,
+                          "amount": 2160
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "name": "2.5kg",
+                          "quantity": 5,
+                          "unitPrice": 65,
+                          "subtotal": 325,
+                          "discountAmount": 0,
+                          "amount": 325
+                        }
+                      ],
+                      "subtotal": 2485,
+                      "discountAmount": 0,
+                      "total": 2485,
+                      "status": "issued",
+                      "createdBy": "USR-000003"
                     }
-                  ],
-                  "total": 2485,
-                  "status": "issued",
-                  "createdBy": "USR-000003"
+                  },
+                  "percentageCoupon": {
+                    "value": {
+                      "isActive": true,
+                      "createdAt": "2026-11-19T09:00:00Z",
+                      "updatedAt": "2026-11-19T09:00:00Z",
+                      "invoiceId": "INV-000001",
+                      "invoiceNo": "INV/26-27/00001",
+                      "customerId": "CUS-000001",
+                      "orderId": "ORD-000001",
+                      "tripId": "TRP-000001",
+                      "lines": [
+                        {
+                          "variantId": "MVN-000001",
+                          "name": "5kg",
+                          "quantity": 18,
+                          "unitPrice": 120,
+                          "subtotal": 2160,
+                          "discountAmount": 216.0,
+                          "amount": 1944.0
+                        },
+                        {
+                          "variantId": "MVN-000002",
+                          "name": "2.5kg",
+                          "quantity": 5,
+                          "unitPrice": 65,
+                          "subtotal": 325,
+                          "discountAmount": 32.5,
+                          "amount": 292.5
+                        }
+                      ],
+                      "subtotal": 2485,
+                      "discountAmount": 248.5,
+                      "total": 2236.5,
+                      "status": "issued",
+                      "createdBy": "USR-000003",
+                      "discount": {
+                        "couponId": "CPN-000001",
+                        "code": "WELCOME10",
+                        "name": "Welcome discount",
+                        "type": "percentage",
+                        "value": 10
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -13201,6 +14165,8 @@
                       "name": "5kg",
                       "quantity": 18,
                       "unitPrice": 120,
+                      "subtotal": 2160,
+                      "discountAmount": 0,
                       "amount": 2160
                     },
                     {
@@ -13208,9 +14174,13 @@
                       "name": "2.5kg",
                       "quantity": 5,
                       "unitPrice": 65,
+                      "subtotal": 325,
+                      "discountAmount": 0,
                       "amount": 325
                     }
                   ],
+                  "subtotal": 2485,
+                  "discountAmount": 0,
                   "total": 2485,
                   "status": "cancelled",
                   "createdBy": "USR-000003",
@@ -15439,6 +16409,241 @@
           "awaitingStockQuantity": 0
         }
       },
+      "DiscountInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.01,
+            "maximum": 1000000000
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "type",
+          "value",
+          "reason"
+        ],
+        "example": {
+          "type": "fixed",
+          "value": 100,
+          "reason": "Customer loyalty"
+        }
+      },
+      "Discount": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "couponId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "code": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "example": {
+          "couponId": "CPN-000001",
+          "code": "WELCOME10",
+          "name": "Welcome discount",
+          "type": "percentage",
+          "value": 10
+        }
+      },
+      "CouponInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32,
+            "description": "Case-insensitive letters, digits, underscores and hyphens. Stored uppercase; unique within your business, including archived codes."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.01,
+            "maximum": 1000000000,
+            "description": "Percentage: greater than zero, at most 100. Fixed: INR. Rounded to two decimals."
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "type",
+          "value"
+        ],
+        "example": {
+          "name": "Welcome discount",
+          "code": "WELCOME10",
+          "type": "percentage",
+          "value": 10
+        }
+      },
+      "Coupon": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "couponId": {
+            "type": "string",
+            "description": "Optional. Omit for an independent collection, including delivery partner collections on a later visit. If supplied, requires an authorized started trip and a customer on that trip."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32,
+            "description": "Case-insensitive letters, digits, underscores and hyphens. Stored uppercase; unique within your business, including archived codes."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.01,
+            "maximum": 1000000000,
+            "description": "Percentage: greater than zero, at most 100. Fixed: INR. Rounded to two decimals."
+          }
+        },
+        "required": [
+          "isActive",
+          "createdAt",
+          "updatedAt",
+          "couponId",
+          "name",
+          "code",
+          "type",
+          "value"
+        ],
+        "example": {
+          "isActive": true,
+          "createdAt": "2026-11-19T09:00:00Z",
+          "updatedAt": "2026-11-19T09:00:00Z",
+          "couponId": "CPN-000001",
+          "name": "Welcome discount",
+          "code": "WELCOME10",
+          "type": "percentage",
+          "value": 10
+        }
+      },
+      "CouponList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Coupon"
+            },
+            "maxItems": 200
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ],
+        "example": {
+          "items": [
+            {
+              "isActive": true,
+              "createdAt": "2026-11-19T09:00:00Z",
+              "updatedAt": "2026-11-19T09:00:00Z",
+              "couponId": "CPN-000001",
+              "name": "Welcome discount",
+              "code": "WELCOME10",
+              "type": "percentage",
+              "value": 10
+            }
+          ],
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      },
       "OrderInput": {
         "type": "object",
         "additionalProperties": false,
@@ -15470,6 +16675,14 @@
             },
             "maxItems": 200,
             "minItems": 1
+          },
+          "couponId": {
+            "type": "string",
+            "description": "Optional active business coupon. Mutually exclusive with discount."
+          },
+          "discount": {
+            "$ref": "#/components/schemas/DiscountInput",
+            "description": "Admin/manager only. Manual discount requires a reason. Cannot combine with a coupon."
           }
         },
         "required": [
@@ -15537,6 +16750,9 @@
             },
             "maxItems": 200,
             "minItems": 1
+          },
+          "discount": {
+            "$ref": "#/components/schemas/Discount"
           },
           "picked": {
             "type": "array",
@@ -16110,11 +17326,24 @@
             "minimum": 0,
             "maximum": 1000000000
           },
-          "amount": {
+          "subtotal": {
             "type": "number",
             "format": "double",
             "minimum": 0,
             "maximum": 1000000000
+          },
+          "discountAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000,
+            "description": "Net line amount after its allocated share of the order discount."
           }
         },
         "required": [
@@ -16122,6 +17351,8 @@
           "name",
           "quantity",
           "unitPrice",
+          "subtotal",
+          "discountAmount",
           "amount"
         ],
         "example": {
@@ -16129,6 +17360,8 @@
           "name": "5kg",
           "quantity": 18,
           "unitPrice": 120,
+          "subtotal": 2160,
+          "discountAmount": 0,
           "amount": 2160
         }
       },
@@ -16175,11 +17408,27 @@
             },
             "maxItems": 200
           },
-          "total": {
+          "subtotal": {
             "type": "number",
             "format": "double",
             "minimum": 0,
             "maximum": 1000000000
+          },
+          "discountAmount": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "discount": {
+            "$ref": "#/components/schemas/Discount"
+          },
+          "total": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0,
+            "maximum": 1000000000,
+            "description": "Net payable amount. Subtotal minus discountAmount; sums net line amounts."
           },
           "status": {
             "type": "string",
@@ -16207,6 +17456,8 @@
           "orderId",
           "tripId",
           "lines",
+          "subtotal",
+          "discountAmount",
           "total",
           "status",
           "createdBy"
@@ -16226,6 +17477,8 @@
               "name": "5kg",
               "quantity": 18,
               "unitPrice": 120,
+              "subtotal": 2160,
+              "discountAmount": 0,
               "amount": 2160
             },
             {
@@ -16233,9 +17486,13 @@
               "name": "2.5kg",
               "quantity": 5,
               "unitPrice": 65,
+              "subtotal": 325,
+              "discountAmount": 0,
               "amount": 325
             }
           ],
+          "subtotal": 2485,
+          "discountAmount": 0,
           "total": 2485,
           "status": "issued",
           "createdBy": "USR-000003"
@@ -16435,6 +17692,8 @@
                 "name": "5kg",
                 "quantity": 18,
                 "unitPrice": 120,
+                "subtotal": 2160,
+                "discountAmount": 0,
                 "amount": 2160
               },
               {
@@ -16442,9 +17701,13 @@
                 "name": "2.5kg",
                 "quantity": 5,
                 "unitPrice": 65,
+                "subtotal": 325,
+                "discountAmount": 0,
                 "amount": 325
               }
             ],
+            "subtotal": 2485,
+            "discountAmount": 0,
             "total": 2485,
             "status": "issued",
             "createdBy": "USR-000003"
@@ -18699,6 +19962,8 @@
                   "name": "5kg",
                   "quantity": 18,
                   "unitPrice": 120,
+                  "subtotal": 2160,
+                  "discountAmount": 0,
                   "amount": 2160
                 },
                 {
@@ -18706,9 +19971,13 @@
                   "name": "2.5kg",
                   "quantity": 5,
                   "unitPrice": 65,
+                  "subtotal": 325,
+                  "discountAmount": 0,
                   "amount": 325
                 }
               ],
+              "subtotal": 2485,
+              "discountAmount": 0,
               "total": 2485,
               "status": "issued",
               "createdBy": "USR-000003"

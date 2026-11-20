@@ -27,8 +27,24 @@ func (s *Store) createInvoice(sc mongo.SessionContext, a Actor, t Trip, o Order,
 		if total > 100000000000 {
 			return out, apperr.Validation("Invoice total must be at most 1,000,000,000")
 		}
-		lines = append(lines, InvoiceLine{v.VariantID, v.Name, it.Quantity, v.Price, money(amount)})
+		lines = append(lines, InvoiceLine{VariantID: v.VariantID, Name: v.Name, Quantity: it.Quantity, UnitPrice: v.Price, Amount: money(amount)})
 	}
+	orderSubtotal := total
+	if o.Discount != nil && o.Discount.Type == "fixed" {
+		orderSubtotal = 0
+		for _, it := range o.Items {
+			var v Variant
+			if err := s.find(sc, "variants", "variantId", it.VariantID, &v); err != nil {
+				return out, err
+			}
+			orderSubtotal += cents(v.Price) * it.Quantity
+			if orderSubtotal > 100000000000 {
+				return out, apperr.Validation("Order subtotal must be at most 1,000,000,000")
+			}
+		}
+	}
+	discount := discountCents(o.Discount, total, orderSubtotal)
+	applyInvoiceDiscount(lines, discount)
 	id, err := s.next(sc, "invoice", "INV-")
 	if err != nil {
 		return out, err
@@ -42,7 +58,7 @@ func (s *Store) createInvoice(sc mongo.SessionContext, a Actor, t Trip, o Order,
 	if err != nil {
 		return out, err
 	}
-	out = Invoice{Base: s.base(), InvoiceID: id, InvoiceNo: no, CustomerID: o.CustomerID, OrderID: o.OrderID, TripID: t.TripID, Lines: lines, Total: money(total), Status: "issued", CreatedBy: a.UserID}
+	out = Invoice{Base: s.base(), Subtotal: money(total), DiscountAmount: money(discount), Discount: o.Discount, InvoiceID: id, InvoiceNo: no, CustomerID: o.CustomerID, OrderID: o.OrderID, TripID: t.TripID, Lines: lines, Total: money(total - discount), Status: "issued", CreatedBy: a.UserID}
 	return out, insert(sc, s.col("invoices"), out)
 }
 func readAll[T any](ctx context.Context, c *database.Collection, filter bson.M, sortBy bson.D) ([]T, error) {

@@ -170,6 +170,9 @@ func list[T any](ctx context.Context, s *Store, collection string, filter bson.M
 	}
 	defer cur.Close(ctx)
 	err = cur.All(ctx, &out.Items)
+	for i := range out.Items {
+		normalizeRecord(&out.Items[i])
+	}
 	return out, err
 }
 
@@ -309,7 +312,7 @@ func (s *Store) GetInvoice(ctx context.Context, a Actor, id string) (Invoice, er
 }
 
 func (s *Store) Archive(ctx context.Context, a Actor, resource, id string) error {
-	fields := map[string]string{"products": "productId", "variants": "variantId", "customers": "customerId", "users": "userId"}
+	fields := map[string]string{"products": "productId", "variants": "variantId", "customers": "customerId", "users": "userId", "coupons": "couponId"}
 	field, ok := fields[resource]
 	if !ok {
 		return apperr.NotFound()
@@ -367,6 +370,15 @@ func (s *Store) Archive(ctx context.Context, a Actor, resource, id string) error
 
 func normalizeRecord(out any) {
 	switch v := out.(type) {
+	case *Invoice:
+		if v.Discount == nil && v.Subtotal == 0 {
+			v.Subtotal = v.Total
+		}
+		for i := range v.Lines {
+			if v.Lines[i].Subtotal == 0 && v.Lines[i].DiscountAmount == 0 {
+				v.Lines[i].Subtotal = v.Lines[i].Amount
+			}
+		}
 	case *Trip:
 		normalizeTrip(v)
 	case *BusinessAccount:

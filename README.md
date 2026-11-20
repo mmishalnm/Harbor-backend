@@ -1,5 +1,19 @@
 # Harbor-backend
 
+## Coupons and order discounts (backend 1.11.0, app 1.8.0)
+
+In Flutter, open **More → Coupons & discounts** to create, edit or archive a percentage or fixed INR coupon. Every order form, including create-during-pickup, offers **No discount**, **Apply a coupon**, and (admin/manager only) **Enter a discount**. Manual discounts require a reason. One discount per order; coupons cannot be combined with manual discounts. Staff/riders may select active coupons approved by their own business.
+
+`POST /api/v1/coupons` accepts `{"name":"Welcome","code":"WELCOME10","type":"percentage","value":10}`. Use `type: "fixed"` for an INR amount. Admin/manager management uses paginated `GET /api/v1/coupons`, `PUT /api/v1/coupons/{id}` and `POST /api/v1/coupons/{id}/archive`. All order creators use paginated `GET /api/v1/coupons/options` to choose active coupons. Codes are case-insensitive, unique per business (including archived coupons), and IDs use the atomic `CPN-` series. Every write runs in `WithTx` and every reference is scoped to the signed business.
+
+Add `"couponId":"CPN-000001"` to order creation, or add `"discount":{"type":"fixed","value":100,"reason":"Customer loyalty"}`. Percentage values must be greater than zero and at most 100; fixed amounts must be positive and cannot exceed the order subtotal at creation. Values round to two decimals. Orders snapshot the code, name, type and value; later edits or archiving never change an existing order.
+
+Invoices retain current variant unit prices at delivery. Percentage discounts apply to the delivered subtotal. Fixed discounts are prorated by delivered subtotal divided by the full-order subtotal, both at the same delivery-time prices. If prices fall below the fixed discount, it is capped to keep totals nonnegative. Example: an order for 10 bags with ₹100 off delivers 4 bags at ₹150 each: subtotal ₹600, discount ₹40, net invoice ₹560. Undelivered goods create no invoice. Full 100% discounts create a valid zero-net invoice.
+
+Invoices expose `subtotal`, `discountAmount`, the discount snapshot and net `total`. Each line exposes gross `subtotal`, allocated `discountAmount` and net `amount`; proportional allocation distributes leftover paise deterministically so line totals sum exactly. Ledger balances, oldest-invoice-first payment allocation, advance credit and sales analytics use net totals. Physical stock, reservations, collected cash and partner settlements keep their existing quantities/amounts. Old invoices return their original totals with zero discount. Swagger `/docs` includes request examples for both discount types and a discounted invoice response.
+
+Deploy backend **1.11.0** to Render before installing app **1.8.0+11**. Build without Docker using `go build -o harbor .`, then `./harbor -env-file .env`; the existing private environment is unchanged.
+
 ## Display names for mobile screens
 
 `POST /api/v1/display-names` resolves up to 200 explicit business IDs to readable labels. It is a read-only batch lookup, not a directory: inaccessible or missing IDs are omitted. All four roles may call it, with account, location, vehicle, order, trip and invoice restrictions preserved. Riders can resolve customer names across their own business for order selection. Staff customer names and all team names remain limited to visible orders/trips and their own identity. No contacts, balances, credentials or stock quantities are returned. Archived accessible names remain available for audit history. Inputs and expected responses are documented in Swagger.

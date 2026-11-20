@@ -146,6 +146,26 @@ func pagination(r *http.Request) (store.Page, error) {
 	return p, store.ValidatePage(p)
 }
 func (s *Server) register() {
+	s.add("POST", "/api/v1/coupons", admins, 201, body(func(a store.Actor, r *http.Request, in store.CouponInput) (any, error) {
+		return s.Store.SaveCoupon(r.Context(), a, "", in)
+	}))
+	s.add("PUT", "/api/v1/coupons/{id}", admins, 200, body(func(a store.Actor, r *http.Request, in store.CouponInput) (any, error) {
+		return s.Store.SaveCoupon(r.Context(), a, r.PathValue("id"), in)
+	}))
+	for _, optionsOnly := range []bool{false, true} {
+		path, roles := "/api/v1/coupons", admins
+		if optionsOnly {
+			path += "/options"
+			roles = everyone
+		}
+		s.add("GET", path, roles, 200, func(a store.Actor, r *http.Request) (any, error) {
+			p, err := pagination(r)
+			if err != nil {
+				return nil, err
+			}
+			return s.Store.Coupons(r.Context(), a, p, r.URL.Query().Get("isActive"), optionsOnly)
+		})
+	}
 	s.add("GET", "/health", nil, 200, func(_ store.Actor, _ *http.Request) (any, error) { return map[string]string{"status": "ok"}, nil })
 	s.add("POST", "/api/v1/auth/login", nil, 200, body(func(_ store.Actor, r *http.Request, in struct {
 		Username string `json:"username"`
@@ -383,7 +403,7 @@ func (s *Server) register() {
 			return s.Store.ListResources(r.Context(), a, resource, p, f)
 		})
 	}
-	for _, resource := range []string{"products", "variants", "customers", "users"} {
+	for _, resource := range []string{"products", "variants", "customers", "users", "coupons"} {
 		roles := admins
 		if resource == "users" {
 			roles = []string{store.Admin}

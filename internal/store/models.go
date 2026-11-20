@@ -79,6 +79,7 @@ type Item struct {
 	Quantity  int64  `json:"quantity" bson:"quantity"`
 }
 type Order struct {
+	Discount           *Discount  `json:"discount,omitempty" bson:"discount,omitempty"`
 	ReservedItems      []Item     `json:"reservedItems" bson:"-"`
 	AwaitingStockItems []Item     `json:"awaitingStockItems" bson:"-"`
 	CancelReason       string     `json:"cancelReason,omitempty" bson:"cancelReason,omitempty"`
@@ -136,24 +137,29 @@ type Movement struct {
 	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`
 }
 type InvoiceLine struct {
-	VariantID string  `json:"variantId" bson:"variantId"`
-	Name      string  `json:"name" bson:"name"`
-	Quantity  int64   `json:"quantity" bson:"quantity"`
-	UnitPrice float64 `json:"unitPrice" bson:"unitPrice"`
-	Amount    float64 `json:"amount" bson:"amount"`
+	Subtotal       float64 `json:"subtotal" bson:"subtotal"`
+	DiscountAmount float64 `json:"discountAmount" bson:"discountAmount"`
+	VariantID      string  `json:"variantId" bson:"variantId"`
+	Name           string  `json:"name" bson:"name"`
+	Quantity       int64   `json:"quantity" bson:"quantity"`
+	UnitPrice      float64 `json:"unitPrice" bson:"unitPrice"`
+	Amount         float64 `json:"amount" bson:"amount"`
 }
 type Invoice struct {
-	Base         `bson:",inline"`
-	InvoiceID    string        `json:"invoiceId" bson:"invoiceId"`
-	InvoiceNo    string        `json:"invoiceNo" bson:"invoiceNo"`
-	CustomerID   string        `json:"customerId" bson:"customerId"`
-	OrderID      string        `json:"orderId" bson:"orderId"`
-	TripID       string        `json:"tripId" bson:"tripId"`
-	Lines        []InvoiceLine `json:"lines" bson:"lines"`
-	Total        float64       `json:"total" bson:"total"`
-	Status       string        `json:"status" bson:"status"`
-	CancelReason string        `json:"cancelReason,omitempty" bson:"cancelReason"`
-	CreatedBy    string        `json:"createdBy" bson:"createdBy"`
+	Subtotal       float64   `json:"subtotal" bson:"subtotal"`
+	DiscountAmount float64   `json:"discountAmount" bson:"discountAmount"`
+	Discount       *Discount `json:"discount,omitempty" bson:"discount,omitempty"`
+	Base           `bson:",inline"`
+	InvoiceID      string        `json:"invoiceId" bson:"invoiceId"`
+	InvoiceNo      string        `json:"invoiceNo" bson:"invoiceNo"`
+	CustomerID     string        `json:"customerId" bson:"customerId"`
+	OrderID        string        `json:"orderId" bson:"orderId"`
+	TripID         string        `json:"tripId" bson:"tripId"`
+	Lines          []InvoiceLine `json:"lines" bson:"lines"`
+	Total          float64       `json:"total" bson:"total"`
+	Status         string        `json:"status" bson:"status"`
+	CancelReason   string        `json:"cancelReason,omitempty" bson:"cancelReason"`
+	CreatedBy      string        `json:"createdBy" bson:"createdBy"`
 }
 type Payment struct {
 	PaymentID  string    `json:"paymentId" bson:"paymentId"`

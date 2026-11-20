@@ -12,10 +12,12 @@ import (
 )
 
 type OrderInput struct {
-	TripID     string `json:"tripId"`
-	CustomerID string `json:"customerId"`
-	Source     string `json:"source"`
-	Items      []Item `json:"items"`
+	CouponID   string         `json:"couponId,omitempty"`
+	Discount   *DiscountInput `json:"discount,omitempty"`
+	TripID     string         `json:"tripId"`
+	CustomerID string         `json:"customerId"`
+	Source     string         `json:"source"`
+	Items      []Item         `json:"items"`
 }
 
 func validateOrder(in OrderInput) error {
@@ -37,17 +39,26 @@ func (s *Store) newOrder(sc mongo.SessionContext, a Actor, in OrderInput) (Order
 	if err := s.lock(sc, "customers", "customerId", in.CustomerID, &c); err != nil {
 		return out, err
 	}
+	var subtotal int64
 	for _, it := range in.Items {
 		var v Variant
 		if err := s.lock(sc, "variants", "variantId", it.VariantID, &v); err != nil {
 			return out, err
 		}
+		subtotal += cents(v.Price) * it.Quantity
+		if subtotal > 100000000000 {
+			return out, apperr.Validation("Order subtotal must be at most 1,000,000,000")
+		}
+	}
+	discount, err := s.orderDiscount(sc, a, in, subtotal)
+	if err != nil {
+		return out, err
 	}
 	id, err := s.next(sc, "order", "ORD-")
 	if err != nil {
 		return out, err
 	}
-	out = Order{Base: s.base(), OrderID: id, CustomerID: in.CustomerID, Source: in.Source, Items: in.Items, Picked: []Item{}, Status: "open", CreatedBy: a.UserID}
+	out = Order{Base: s.base(), Discount: discount, OrderID: id, CustomerID: in.CustomerID, Source: in.Source, Items: in.Items, Picked: []Item{}, Status: "open", CreatedBy: a.UserID}
 	return out, insert(sc, s.col("orders"), out)
 }
 func (s *Store) CreateOrder(ctx context.Context, a Actor, in OrderInput) (Order, error) {
